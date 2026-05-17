@@ -1,26 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
 import {
-    Home,
-    GraduationCap,
-    FileText,
-    BookOpen,
-    Users,
-    Truck,
-    User,
     Pencil,
     Eye,
     Trash2,
     Plus,
     Mail,
-    CogIcon,
 } from "lucide-react";
-
 import type { JSX } from "react";
-
-import Logo from "/src/assets/LOGO.svg";
-
 import {
     Dialog,
     DialogContent,
@@ -28,7 +14,6 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,8 +27,6 @@ type Docente = {
 };
 
 export default function Docentes(): JSX.Element {
-    const navigate = useNavigate();
-
     const [docentes, setDocentes] = useState<Docente[]>([
         {
             id: 1,
@@ -109,93 +92,6 @@ export default function Docentes(): JSX.Element {
 
     return (
         <div className="flex h-screen bg-zinc-100">
-            {/* SIDEBAR */}
-            <aside className="w-64 bg-white border-r flex flex-col justify-between">
-                <div>
-                    <div className="p-6 flex items-center justify-center">
-                        <img
-                            src={Logo}
-                            alt="LOGO"
-                            className="w-35"
-                        />
-                    </div>
-
-                    <nav className="p-4 space-y-2">
-                        <MenuItem
-                            icon={<CogIcon size={18} />}
-                            label="Configuracoes"
-                            onClick={() => navigate("/configs")}
-                        />
-                        <MenuItem
-                            icon={<Home size={18} />}
-                            label="Home"
-                            onClick={() => navigate("/home")}
-                        />
-
-                        <MenuItem
-                            icon={
-                                <GraduationCap size={18} />
-                            }
-                            label="Alunos"
-                            onClick={() =>
-                                navigate("/alunos")
-                            }
-                        />
-
-                        <MenuItem
-                            icon={<FileText size={18} />}
-                            label="Docentes"
-                            onClick={() =>
-                                navigate("/docentes")
-                            }
-                            active
-                        />
-
-                        <MenuItem
-                            icon={<BookOpen size={18} />}
-                            label="Cursos"
-                            onClick={() =>
-                                navigate("/cursos")
-                            }
-                        />
-
-                        <MenuItem
-                            icon={<Users size={18} />}
-                            label="Turmas"
-                            onClick={() =>
-                                navigate("/turmas")
-                            }
-                        />
-
-                        <MenuItem
-                            icon={<Truck size={18} />}
-                            label="Fornecedores"
-                            onClick={() =>
-                                navigate("/fornecedores")
-                            }
-                        />
-
-                        <MenuItem
-                            icon={<User size={18} />}
-                            label="Usuários"
-                            onClick={() =>
-                                navigate("/usuarios")
-                            }
-                        />
-                    </nav>
-                </div>
-
-                <div className="p-4 border-t">
-                    <p className="font-semibold text-sm">
-                        John Doe
-                    </p>
-
-                    <p className="text-xs text-gray-500">
-                        johndoe@instituicao.com.br
-                    </p>
-                </div>
-            </aside>
-
             {/* CONTEÚDO */}
             <main className="flex-1 p-8 overflow-auto">
                 <h2 className="text-2xl font-bold mb-6">
@@ -527,33 +423,5 @@ export default function Docentes(): JSX.Element {
                 </DialogContent>
             </Dialog>
         </div>
-    );
-}
-
-function MenuItem({
-    icon,
-    label,
-    active = false,
-    onClick,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    active?: boolean;
-    onClick?: () => void;
-}) {
-    return (
-        <button
-            onClick={onClick}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition
-      ${
-          active
-              ? "bg-zinc-200 font-semibold"
-              : "hover:bg-zinc-100 text-zinc-700"
-      }`}
-        >
-            {icon}
-
-            <span>{label}</span>
-        </button>
     );
 }

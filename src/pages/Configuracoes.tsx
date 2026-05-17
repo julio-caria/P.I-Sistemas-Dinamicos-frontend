@@ -5,7 +5,7 @@ export default function Configuracoes() {
     const { theme, setTheme } = useTheme();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-zinc-100 to-zinc-200 p-8">
+        <div className="min-h-screen bg-linear-to-br from-zinc-100 to-zinc-200 p-8">
             <div className="max-w-7xl mx-auto">
                 {/* HEADER */}
                 <div className="mb-8 flex items-center justify-between">

@@ -24,7 +24,7 @@
   }
 
   p {
-    @apply text-gray-600 mb-2;
+    @apply text-zinc-600 mb-2;
   }
 
   input {
@@ -32,15 +32,15 @@
   }
 
   input:focus {
-    @apply border-indigo-600 ring-1 ring-indigo-600;
+    @apply border-blue-600 ring-1 ring-blue-600;
   }
 
   button {
-    @apply p-2 rounded-md bg-indigo-600 text-white transition;
+    @apply p-2 rounded-md bg-blue-900 text-white transition;
   }
 
   button:hover {
-    @apply bg-indigo-700;
+    @apply bg-blue-700;
   }
   * {
     @apply border-border outline-ring/50;

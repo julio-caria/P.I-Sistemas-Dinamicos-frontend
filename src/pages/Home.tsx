@@ -1,29 +1,12 @@
 import {
-    Home as HomeIcon,
-    GraduationCap,
-    FileText,
-    BookOpen,
     Users,
-    Truck,
-    User,
-    ChevronLeft,
-    ChevronRight,
-    CogIcon,
 } from "lucide-react";
-
 import React, { type JSX } from "react";
-
-import Logo from "/src/assets/LOGO.svg";
-
-import { useNavigate } from "react-router-dom";
-
 import {
     Card,
     CardContent,
 } from "@/components/ui/card";
-
 import { Button } from "@/components/ui/button";
-
 import {
     Area,
     AreaChart,
@@ -37,13 +20,6 @@ import {
     Pie,
     Cell,
 } from "recharts";
-
-type MenuItemProps = {
-    icon: React.ReactNode;
-    label: string;
-    active?: boolean;
-    onClick?: () => void;
-};
 
 const cursosMatriculas = [
     { name: "ADS", value: 120 },
@@ -85,89 +61,8 @@ const areaData = [
 ];
 
 export default function Home(): JSX.Element {
-    const navigate = useNavigate();
-
     return (
         <div className="flex h-screen bg-zinc-100">
-            {/* SIDEBAR */}
-            <aside className="w-64 bg-white border-r flex flex-col justify-between">
-                <div>
-                    {/* LOGO */}
-                    <div className="p-6 flex items-center justify-center">
-                        <img
-                            src={Logo}
-                            alt="LOGO"
-                            className="w-35"
-                        />
-                    </div>
-
-                    {/* MENU */}
-                    <nav className="p-4 space-y-2">
-                        <MenuItem
-                            icon={<CogIcon size={18} />}
-                            label="Configuracoes"
-                            onClick={() => navigate("/configs")}
-                        />
-                        <MenuItem
-                            icon={<HomeIcon size={18} />}
-                            label="Home"
-                            active
-                            onClick={() => navigate("/home")}
-                        />
-
-                        <MenuItem
-                            icon={<GraduationCap size={18} />}
-                            label="Alunos"
-                            onClick={() => navigate("/alunos")}
-                        />
-
-                        <MenuItem
-                            icon={<FileText size={18} />}
-                            label="Docentes"
-                            onClick={() => navigate("/docentes")}
-                        />
-
-                        <MenuItem
-                            icon={<BookOpen size={18} />}
-                            label="Cursos"
-                            onClick={() => navigate("/cursos")}
-
-                        />
-
-                        <MenuItem
-                            icon={<Users size={18} />}
-                            label="Turmas"
-                            onClick={() => navigate("/turmas")}
-
-                        />
-
-                        <MenuItem
-                            icon={<Truck size={18} />}
-                            label="Fornecedores"
-                            onClick={() => navigate("/fornecedores")}
-
-                        />
-
-                        <MenuItem
-                            icon={<User size={18} />}
-                            label="Usuários"
-                            onClick={() => navigate("/usuarios")}
-                        />
-                    </nav>
-                </div>
-
-                {/* USER */}
-                <div className="p-4 border-t">
-                    <p className="font-semibold text-sm">
-                        John Doe
-                    </p>
-
-                    <p className="text-xs text-gray-500">
-                        johndoe@instituicao.com.br
-                    </p>
-                </div>
-            </aside>
-
             {/* CONTEÚDO */}
             <main className="flex-1 p-10 overflow-auto">
                 {/* TÍTULO */}
@@ -200,7 +95,7 @@ export default function Home(): JSX.Element {
 
                     {/* CALENDÁRIO */}
                     <Card className="rounded-2xl border-none shadow-sm">
-                        <CardContent className="h-[300px] p-5">
+                        <CardContent className="h-75 p-5">
                             <h2 className="font-bold mb-4">
                                 Cursos com mais matrículas
                             </h2>
@@ -243,7 +138,7 @@ export default function Home(): JSX.Element {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     {/* PIE */}
                     <Card className="rounded-2xl border-none shadow-sm">
-                        <CardContent className="h-[300px] p-5">
+                        <CardContent className="h-75 p-5">
                             <h2 className="font-bold mb-4">
                                 Matrículas por período
                             </h2>
@@ -282,7 +177,7 @@ export default function Home(): JSX.Element {
                                 </Button>
                             </div>
 
-                            <div className="h-[400px]">
+                            <div className="h-100">
                                 <ResponsiveContainer
                                     width="100%"
                                     height="100%"
@@ -324,7 +219,7 @@ export default function Home(): JSX.Element {
                             </Button>
                         </div>
 
-                        <div className="h-[400px]">
+                        <div className="h-100">
                             <ResponsiveContainer
                                 width="100%"
                                 height="100%"
@@ -387,28 +282,5 @@ function DashboardCard({
                 </div>
             </CardContent>
         </Card>
-    );
-}
-
-/* MENU */
-function MenuItem({
-    icon,
-    label,
-    active = false,
-    onClick,
-}: MenuItemProps): JSX.Element {
-    return (
-        <button
-            onClick={onClick}
-            className={`w-full flex items-center gap-3 px-4 py-4 rounded-xl transition
-      ${active
-                    ? "bg-zinc-200 font-semibold"
-                    : "hover:bg-zinc-100"
-                }`}
-        >
-            {icon}
-
-            <span>{label}</span>
-        </button>
     );
 }

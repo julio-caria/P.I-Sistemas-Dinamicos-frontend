@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -20,6 +20,8 @@ import type { JSX } from "react";
 
 import Logo from "/src/assets/LOGO.svg";
 
+import { api } from "@/services/api";
+
 import {
     Dialog,
     DialogContent,
@@ -33,32 +35,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Usuario = {
-    id: number;
+    id: string;
     nome: string;
-    setor: string;
-    acesso: string;
-    status: "Ativo" | "Inativo";
+    email?: string;
+    setor?: string;
+    acesso?: string;
+    status?: "Ativo" | "Inativo";
 };
 
 export default function Usuarios(): JSX.Element {
     const navigate = useNavigate();
 
-    const [usuarios, setUsuarios] = useState<Usuario[]>([
-        {
-            id: 1,
-            nome: "REGISTRO",
-            setor: "TI",
-            acesso: "09h03",
-            status: "Ativo",
-        },
-        {
-            id: 2,
-            nome: "REGISTRO",
-            setor: "Secretaria",
-            acesso: "09h03",
-            status: "Ativo",
-        },
-    ]);
+    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
     const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
 
@@ -69,36 +57,80 @@ export default function Usuarios(): JSX.Element {
 
     const [novoUsuario, setNovoUsuario] = useState({
         nome: "",
+        email: "",
+        senha: "",
         setor: "",
     });
 
-    function handleAddUser() {
-        const novo: Usuario = {
-            id: Date.now(),
-            nome: novoUsuario.nome,
-            setor: novoUsuario.setor,
-            acesso: "00h00",
-            status: "Ativo",
-        };
+    useEffect(() => {
+        fetchUsers();
+    }, []);
 
-        setUsuarios((prev) => [...prev, novo]);
+    async function fetchUsers() {
+        try {
+            const response = await api.get("/api/users");
 
-        setNovoUsuario({
-            nome: "",
-            setor: "",
-        });
-
-        setOpenAdd(false);
+            setUsuarios(response.data);
+        } catch (err) {
+            console.error("Erro ao buscar usuários:", err);
+        }
     }
 
-    function handleDeleteUser() {
+    async function handleAddUser() {
+        try {
+            await api.post("/api/users", {
+                name: novoUsuario.nome,
+                email: novoUsuario.email,
+                password: novoUsuario.senha,
+            });
+
+            await fetchUsers();
+
+            setNovoUsuario({
+                nome: "",
+                email: "",
+                senha: "",
+                setor: "",
+            });
+
+            setOpenAdd(false);
+
+        } catch (err) {
+            console.error("Erro ao cadastrar usuário:", err);
+        }
+    }
+
+    async function handleDeleteUser() {
         if (!selectedUser) return;
 
-        setUsuarios((prev) =>
-            prev.filter((u) => u.id !== selectedUser.id)
-        );
+        try {
+            await api.delete(`/api/users/${selectedUser.id}`);
 
-        setOpenDelete(false);
+            await fetchUsers();
+
+            setOpenDelete(false);
+
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function handleUpdateUser() {
+        if (!selectedUser) return;
+
+        try {
+            await api.put(`/api/users/${selectedUser.id}`, {
+                name: selectedUser.nome,
+                email: selectedUser.email,
+            });
+
+            await fetchUsers();
+
+            setOpenEdit(false);
+
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     return (
@@ -118,6 +150,7 @@ export default function Usuarios(): JSX.Element {
                             label="Configuracoes"
                             onClick={() => navigate("/configs")}
                         />
+
                         <MenuItem
                             icon={<Home size={18} />}
                             label="Home"
@@ -165,7 +198,9 @@ export default function Usuarios(): JSX.Element {
 
                 {/* USER */}
                 <div className="p-4 border-t">
-                    <p className="font-semibold text-sm">John Doe</p>
+                    <p className="font-semibold text-sm">
+                        John Doe
+                    </p>
 
                     <p className="text-xs text-gray-500">
                         johndoe@instituicao.com.br
@@ -193,8 +228,8 @@ export default function Usuarios(): JSX.Element {
                 <div className="bg-white rounded-xl border overflow-hidden">
                     <div className="grid grid-cols-5 bg-zinc-50 p-4 font-semibold text-sm">
                         <span>Usuário</span>
+                        <span>Email</span>
                         <span>Setor</span>
-                        <span>Último Acesso</span>
                         <span>Status</span>
                         <span>Ação</span>
                     </div>
@@ -206,19 +241,19 @@ export default function Usuarios(): JSX.Element {
                         >
                             <span>{usuario.nome}</span>
 
-                            <span>{usuario.setor}</span>
+                            <span>{usuario.email}</span>
 
                             <span>
-                                dd/mm/aaaa - {usuario.acesso}
+                                {usuario.setor || "-"}
                             </span>
 
                             <span
-                                className={`font-medium ${usuario.status === "Ativo"
-                                        ? "text-green-600"
-                                        : "text-red-500"
+                                className={`font-medium ${usuario.status === "Inativo"
+                                    ? "text-red-500"
+                                    : "text-green-600"
                                     }`}
                             >
-                                {usuario.status}
+                                {usuario.status || "Ativo"}
                             </span>
 
                             {/* AÇÕES */}
@@ -295,6 +330,36 @@ export default function Usuarios(): JSX.Element {
                         </div>
 
                         <div>
+                            <Label>Email</Label>
+
+                            <Input
+                                type="email"
+                                value={novoUsuario.email}
+                                onChange={(e) =>
+                                    setNovoUsuario({
+                                        ...novoUsuario,
+                                        email: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <Label>Senha</Label>
+
+                            <Input
+                                type="password"
+                                value={novoUsuario.senha}
+                                onChange={(e) =>
+                                    setNovoUsuario({
+                                        ...novoUsuario,
+                                        senha: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div>
                             <Label>Setor</Label>
 
                             <Input
@@ -334,19 +399,25 @@ export default function Usuarios(): JSX.Element {
                             </p>
 
                             <p>
+                                <strong>Email:</strong>{" "}
+                                {selectedUser.email}
+                            </p>
+
+                            <p>
                                 <strong>Setor:</strong>{" "}
-                                {selectedUser.setor}
+                                {selectedUser.setor || "-"}
                             </p>
 
                             <p>
                                 <strong>Status:</strong>{" "}
-                                {selectedUser.status}
+                                {selectedUser.status || "Ativo"}
                             </p>
                         </div>
                     )}
                 </DialogContent>
             </Dialog>
 
+            {/* MODAL EDITAR */}
             {/* MODAL EDITAR */}
             <Dialog open={openEdit} onOpenChange={setOpenEdit}>
                 <DialogContent>
@@ -373,32 +444,21 @@ export default function Usuarios(): JSX.Element {
                             </div>
 
                             <div>
-                                <Label>Setor</Label>
+                                <Label>Email</Label>
 
                                 <Input
-                                    value={selectedUser.setor}
+                                    type="email"
+                                    value={selectedUser.email || ""}
                                     onChange={(e) =>
                                         setSelectedUser({
                                             ...selectedUser,
-                                            setor: e.target.value,
+                                            email: e.target.value,
                                         })
                                     }
                                 />
                             </div>
 
-                            <Button
-                                onClick={() => {
-                                    setUsuarios((prev) =>
-                                        prev.map((u) =>
-                                            u.id === selectedUser.id
-                                                ? selectedUser
-                                                : u
-                                        )
-                                    );
-
-                                    setOpenEdit(false);
-                                }}
-                            >
+                            <Button onClick={handleUpdateUser}>
                                 Atualizar
                             </Button>
                         </div>
@@ -448,7 +508,7 @@ function MenuItem({
         <button
             onClick={onClick}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition
-      ${active
+            ${active
                     ? "bg-zinc-200 font-semibold"
                     : "hover:bg-zinc-100 text-zinc-700"
                 }`}

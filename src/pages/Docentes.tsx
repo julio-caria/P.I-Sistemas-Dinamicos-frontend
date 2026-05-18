@@ -199,7 +199,7 @@ export default function Docentes(): JSX.Element {
                 <TableCell>{docente.titulacao}</TableCell>
                 <TableCell>{docente.curso}</TableCell>
                 <TableCell>{docente.status}</TableCell>
-                <TableCell className="text-right">
+                <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="size-8">

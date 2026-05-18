@@ -35,13 +35,10 @@
     @apply border-blue-600 ring-1 ring-blue-600;
   }
 
-  button {
-    @apply p-2 rounded-md bg-blue-900 text-white transition;
-  }
-
   button:hover {
     @apply bg-blue-700;
   }
+  
   * {
     @apply border-border outline-ring/50;
   }

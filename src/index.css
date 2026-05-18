@@ -35,10 +35,6 @@
     @apply border-blue-600 ring-1 ring-blue-600;
   }
 
-  button:hover {
-    @apply bg-blue-700;
-  }
-  
   * {
     @apply border-border outline-ring/50;
   }

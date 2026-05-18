@@ -41,8 +41,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
 type Aluno = {
   id: number;
   nome: string;
@@ -58,8 +56,6 @@ type Curso = {
   nome: string;
 };
 
-// ─── Dados ────────────────────────────────────────────────────────────────────
-
 const cursos: Curso[] = [
   { id: 1, nome: "Tecnologia em Sistemas para a Internet" },
   { id: 2, nome: "Ciência da Computação" },
@@ -70,17 +66,13 @@ const cursos: Curso[] = [
   { id: 7, nome: "Administração" },
 ];
 
-// Estado inicial reutilizável para o formulário de novo aluno
 const NOVO_ALUNO_INICIAL = {
   nome: "",
   cpf: "",
   curso: "",
   email: "",
-  dtMatricula: "", // ← campo presente desde o início, evita reset incompleto
+  dtMatricula: "", 
 };
-
-// ─── Página ───────────────────────────────────────────────────────────────────
-
 export default function Alunos(): JSX.Element {
   const [alunos, setAlunos] = useState<Aluno[]>([
     {
@@ -89,7 +81,7 @@ export default function Alunos(): JSX.Element {
       cpf: "123.456.789-00",
       curso: "Análise e Desenvolvimento de Sistemas",
       email: "joao@email.com",
-      dtMatricula: "2026-02-01", // formato ISO para <input type="date">
+      dtMatricula: "2026-02-01", 
       status: "Ativo",
     },
     {
@@ -111,8 +103,6 @@ export default function Alunos(): JSX.Element {
 
   const [novoAluno, setNovoAluno] = useState(NOVO_ALUNO_INICIAL);
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
-
   function handleAddAluno() {
     const novo: Aluno = {
       id: Date.now(),
@@ -120,12 +110,12 @@ export default function Alunos(): JSX.Element {
       cpf: novoAluno.cpf,
       curso: novoAluno.curso,
       email: novoAluno.email,
-      dtMatricula: novoAluno.dtMatricula, // ← agora é salvo corretamente
+      dtMatricula: novoAluno.dtMatricula, 
       status: "Ativo",
     };
 
     setAlunos((prev) => [...prev, novo]);
-    setNovoAluno(NOVO_ALUNO_INICIAL); // reset completo com todos os campos
+    setNovoAluno(NOVO_ALUNO_INICIAL); 
     setOpenAdd(false);
   }
 
@@ -143,14 +133,11 @@ export default function Alunos(): JSX.Element {
     setOpenDelete(false);
   }
 
-  // Formata data ISO (2026-02-01) para exibição na tabela (01/02/2026)
   function formatarData(iso: string) {
     if (!iso) return "—";
     const [y, m, d] = iso.split("-");
     return `${d}/${m}/${y}`;
   }
-
-  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex h-screen bg-zinc-100">
@@ -251,7 +238,7 @@ export default function Alunos(): JSX.Element {
             <Button variant="outline" onClick={() => setOpenAdd(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleAddAluno}>Salvar</Button>
+            <Button onClick={handleAddAluno}>Matricular</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -266,8 +253,6 @@ export default function Alunos(): JSX.Element {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Reutiliza o mesmo formulário do modal Adicionar,
-              mas pré-preenchido com os dados do registro selecionado */}
           {selectedAluno && (
             <AlunoFormFields
               values={{
@@ -320,8 +305,6 @@ export default function Alunos(): JSX.Element {
     </div>
   );
 }
-
-// ─── Formulário compartilhado entre Adicionar e Editar ────────────────────────
 
 type AlunoFormValues = {
   nome: string;

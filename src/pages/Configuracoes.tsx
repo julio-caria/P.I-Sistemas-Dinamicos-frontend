@@ -10,18 +10,21 @@ export default function Configuracoes() {
         {/* HEADER */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-zinc-800">Configurações</h1>
-            <p className="text-zinc-500 mt-2">
+            <h1 className="text-4xl font-bold !text-black">
+              Configurações
+            </h1>
+
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2">
               Gerencie preferências, segurança e informações da instituição.
             </p>
           </div>
         </div>
 
         {/* GRID */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 ">
           {/* SIDEBAR */}
-          <div className="bg-white rounded-3xl shadow-md p-4 h-fit">
-            <nav className="space-y-2">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-md p-4 h-fit text-black dark:text-white">
+            <nav className="space-y-2" text-black>
               <MenuItem label="Perfil" />
               <MenuItem label="Instituição" />
               <MenuItem label="Permissões" />
@@ -33,14 +36,14 @@ export default function Configuracoes() {
           {/* CONTENT */}
           <div className="xl:col-span-3 space-y-6">
             {/* PERFIL */}
-            <section className="bg-white rounded-3xl shadow-md p-6">
+            <section className="bg-white dark:bg-zinc-900 rounded-3xl shadow-md p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-zinc-800">
+                  <h2 className="text-2xl font-bold text-zinc-800 dark:text-white">
                     Perfil do Administrador
                   </h2>
 
-                  <p className="text-zinc-500 text-sm mt-1">
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
                     Atualize suas informações pessoais.
                   </p>
                 </div>
@@ -64,8 +67,8 @@ export default function Configuracoes() {
             </section>
 
             {/* INSTITUIÇÃO */}
-            <section className="bg-white rounded-3xl shadow-md p-6">
-              <h2 className="text-2xl font-bold text-zinc-800 mb-6">
+            <section className="bg-white dark:bg-zinc-900 rounded-3xl shadow-md p-6">
+              <h2 className="text-2xl font-bold text-zinc-800 dark:text-white mb-6">
                 Informações da Instituição
               </h2>
 
@@ -87,8 +90,8 @@ export default function Configuracoes() {
             </section>
 
             {/* SEGURANÇA */}
-            <section className="bg-white rounded-3xl shadow-md p-6">
-              <h2 className="text-2xl font-bold text-zinc-800 mb-6">
+            <section className="bg-white dark:bg-zinc-900 rounded-3xl shadow-md p-6">
+              <h2 className="text-2xl font-bold text-zinc-800 dark:text-white mb-6">
                 Segurança
               </h2>
 
@@ -113,8 +116,8 @@ export default function Configuracoes() {
             </section>
 
             {/* TEMA */}
-            <section className="bg-white rounded-3xl shadow-md p-6">
-              <h2 className="text-2xl font-bold text-zinc-800 mb-6">
+            <section className="bg-white dark:bg-zinc-900 rounded-3xl shadow-md p-6">
+              <h2 className="text-2xl font-bold text-zinc-800 dark:text-white mb-6">
                 Aparência
               </h2>
 
@@ -138,7 +141,7 @@ export default function Configuracoes() {
                 />
               </div>
             </section>
-            <Button className="bg-blue-900 p-6 text-md">
+            <Button className="bg-blue-900 hover:bg-blue-800 text-white p-6 text-md font-semibold dark:bg-[#242424] dark:hover:bg-[#303030] dark:!text-white dark:border dark:border-black">
               Salvar Alterações
             </Button>
           </div>
@@ -158,10 +161,10 @@ function MenuItem({
 }) {
   return (
     <button
-      className={`w-full text-left px-4 py-3 rounded-md transition-all duration-300 ${
+        className={`w-full text-left px-4 py-3 rounded-md font-semibold border transition-all duration-300 ${
         active
-          ? "bg-blue-900 text-white shadow-md"
-          : "hover:bg-zinc-100 text-zinc-700"
+          ? "bg-blue-900 text-white shadow-md dark:bg-[#242424] dark:text-[#D9A900] dark:border-black"
+          : "text-zinc-700 border-transparent hover:bg-zinc-100 dark:bg-[#242424] dark:text-[#D9A900] dark:border-black dark:hover:bg-[#303030]"
       }`}
     >
       {label}
@@ -179,11 +182,17 @@ function InputField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-zinc-700">{label}</label>
+      <label className="text-sm font-semibold text-black dark:text-white">{label}</label>
       <input
         type="text"
         placeholder={placeholder}
-        className="border border-zinc-200 rounded-md px-4 py-3 outline-none focus:ring-2 focus:ring-black transition-all"
+        className="border border-zinc-200 dark:border-zinc-700
+        bg-white dark:bg-zinc-800
+        text-zinc-900 dark:text-white
+        placeholder:text-zinc-400 dark:placeholder:text-zinc-500
+        rounded-md px-4 py-3 outline-none
+        focus:ring-2 focus:ring-black dark:focus:ring-white
+        transition-all"
       />
     </div>
   );
@@ -200,16 +209,20 @@ function ToggleItem({
   enabled?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between border border-zinc-200 rounded-2xl p-4">
+    <div className="flex items-center justify-between border border-zinc-200 dark:border-zinc-700 rounded-2xl p-4">
       <div>
-        <h3 className="font-semibold text-zinc-800">{title}</h3>
-        <p className="text-sm text-zinc-500 mt-1">{description}</p>
+        <h3 className="font-semibold text-zinc-800 dark:text-white">
+          {title}
+        </h3>
+
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          {description}
+        </p>
       </div>
 
       <div
-        className={`w-14 h-8 rounded-full flex items-center px-1 transition-all ${
-          enabled ? "bg-green-500 justify-end" : "bg-zinc-300 justify-start"
-        }`}
+        className={`w-14 h-8 rounded-full flex items-center px-1 transition-all ${enabled ? "bg-green-500 justify-end" : "bg-zinc-300 justify-start"
+          }`}
       >
         <div className="w-6 h-6 bg-white rounded-full shadow-md" />
       </div>
@@ -231,11 +244,10 @@ function ThemeCard({
   return (
     <button
       onClick={onClick}
-      className={`border rounded-2xl p-6 transition-all duration-300 ${
-        active
-          ? "border-black bg-zinc-100 shadow-md dark:border-white dark:bg-zinc-800"
-          : "border-zinc-200 hover:border-zinc-400 dark:border-zinc-700"
-      }`}
+      className={`border rounded-2xl p-6 transition-all duration-300 ${active
+        ? "border-black bg-zinc-100 shadow-md dark:border-white dark:bg-zinc-800"
+        : "border-zinc-200 hover:border-zinc-400 dark:border-zinc-700"
+        }`}
     >
       <div className="h-24 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 mb-4" />
 

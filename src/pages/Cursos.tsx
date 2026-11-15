@@ -137,16 +137,18 @@ export default function Cursos(): JSX.Element {
   }
 
   return (
-    <div className="flex h-screen bg-zinc-100">
+    <div className="flex h-screen bg-zinc-100 dark:bg-[#181818]">
       {/* CONTEÚDO */}
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Cursos</h2>
+        <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Cursos</h2>
 
         {/* BOTÃO */}
         <div className="flex justify-end mb-6">
           <Button
             onClick={() => setOpenAdd(true)}
-            className="bg-blue-900 cursor-pointer hover:brightness-115"
+            className="bg-blue-900 cursor-pointer hover:brightness-115
+                       dark:bg-[#242424] dark:hover:bg-[#303030]
+                       dark:text-[#D9A900] dark:border dark:border-[#363636]"
           >
             <Plus size={18} />
             <span>Cadastrar Curso</span>
@@ -154,33 +156,55 @@ export default function Cursos(): JSX.Element {
         </div>
 
         {/* TABELA */}
-        <Table className="bg-white p-3 rounded-md">
+
+        {/* TABELA */}
+        <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
           <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Docente</TableHead>
-              <TableHead>Modalidade</TableHead>
-              <TableHead>Semestres</TableHead>
-              <TableHead>Carga Horária</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+            <TableRow className="dark:border-zinc-700">
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Nome</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Docente</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Modalidade</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Semestres</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Carga Horária</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {cursos.map((curso) => (
-              <TableRow key={curso.id}>
-                <TableCell>{curso.nome}</TableCell>
-                <TableCell>{curso.docente}</TableCell>
-                <TableCell>{curso.modalidade}</TableCell>
-                <TableCell>{curso.semestres}</TableCell>
-                <TableCell>{curso.cargaHoraria}</TableCell>
+              <TableRow
+                key={curso.id}
+                className="dark:border-zinc-700 dark:hover:bg-[#303030]"
+              >
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {curso.nome}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {curso.docente}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {curso.modalidade}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {curso.semestres}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {curso.cargaHoraria}
+                </TableCell>
+
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 dark:text-white dark:hover:bg-[#383838]"
+                      >
                         <MoreHorizontalIcon />
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">Abrir menu</span>
                       </Button>
                     </DropdownMenuTrigger>
+
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
                         onClick={() => {
@@ -188,12 +212,12 @@ export default function Cursos(): JSX.Element {
                           setOpenEdit(true);
                         }}
                       >
-                        <span>
-                          <Pencil size={10} />
-                        </span>
+                        <Pencil size={10} />
                         Editar
                       </DropdownMenuItem>
+
                       <DropdownMenuSeparator />
+
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => {
@@ -201,9 +225,7 @@ export default function Cursos(): JSX.Element {
                           setOpenDelete(true);
                         }}
                       >
-                        <span>
-                          <Trash size={10} />
-                        </span>
+                        <Trash size={10} />
                         Excluir
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -213,6 +235,7 @@ export default function Cursos(): JSX.Element {
             ))}
           </TableBody>
         </Table>
+
       </main>
 
       {/* MODAL ADICIONAR */}
@@ -325,7 +348,7 @@ export default function Cursos(): JSX.Element {
 
           <DialogFooter>
             <Button
-              onClick={handleAddCurso}
+              onClick={() => setOpenAdd(false)}
               variant="secondary"
               className="cursor-pointer hover:brightness-115"
             >

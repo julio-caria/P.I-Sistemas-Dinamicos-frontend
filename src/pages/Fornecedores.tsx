@@ -140,60 +140,62 @@ export default function Fornecedores(): JSX.Element {
   }
 
   return (
-    <div className="flex h-screen bg-zinc-100">
+    <div className="flex h-screen bg-zinc-100 dark:bg-[#181818]">
       {/* CONTEÚDO */}
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Fornecedores</h2>
+        <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Fornecedores</h2>
 
         {/* BOTÃO ADICIONAR */}
         <div className="flex justify-end mb-6">
           <Button
             onClick={() => setOpenAdd(true)}
-            className="bg-blue-900 cursor-pointer hover:brightness-115"
-          >
+            className="bg-blue-900 cursor-pointer hover:brightness-115
+                       dark:bg-[#242424] dark:hover:bg-[#303030]
+                       dark:text-[#D9A900] dark:border dark:border-[#363636]"
+                              >
             <Plus size={18} />
             <span>Cadastrar Fornecedor</span>
           </Button>
         </div>
 
         {/* TABELA */}
-        <Table className="bg-white p-3 rounded-md">
+        <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
           <TableHeader>
-            <TableRow>
-              <TableHead className="text-zinc-800 font-bold">
+            <TableRow >
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Razão Social
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">CNPJ</TableHead>
-              <TableHead className="text-zinc-800 font-bold">
+              <TableHead className="text-zinc-800 font-bold dark:text-white">CNPJ</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Inscrição Estadual
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Endereço
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Categoria
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Telefone
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">Status</TableHead>
-              <TableHead className="text-zinc-800 font-bold">Ações</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">Status</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {fornecedores.map((fornecedor) => (
-              <TableRow key={fornecedor.id}>
-                <TableCell>{fornecedor.razaoSocial}</TableCell>
-                <TableCell>{fornecedor.cnpj}</TableCell>
-                <TableCell>{fornecedor.inscricaoEstadual}</TableCell>
-                <TableCell>{fornecedor.endereco}</TableCell>
-                <TableCell>{fornecedor.categoria}</TableCell>
-                <TableCell>{fornecedor.telefone}</TableCell>
-                <TableCell>{fornecedor.status}</TableCell>
-                <TableCell>
+              <TableRow key={fornecedor.id} className="dark:border-zinc-700 dark:hover:bg-[#303030]">
+                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.razaoSocial}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.cnpj}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.inscricaoEstadual}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.endereco}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.categoria}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.telefone}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.status}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8">
+                      <Button variant="ghost" size="icon" className="size-8 dark:text-white dark:hover:bg-[#383838]">
                         <MoreHorizontalIcon />
                         <span className="sr-only">Abrir menu</span>
                       </Button>
@@ -230,10 +232,10 @@ export default function Fornecedores(): JSX.Element {
 
       {/* ── MODAL ADICIONAR ── */}
       <Dialog open={openAdd} onOpenChange={setOpenAdd}>
-        <DialogContent>
+        <DialogContent className="dark:bg-[#242424] dark:border-[#363636] dark:text-white">
           <DialogHeader>
-            <DialogTitle>Cadastrar Usuário</DialogTitle>
-            <DialogDescription className="text-sm text-zinc-500">
+            <DialogTitle className="dark:text-white">Cadastrar Usuário</DialogTitle>
+            <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400">
               Preencha os campos para cadastrar um usuario.
             </DialogDescription>
           </DialogHeader>
@@ -246,20 +248,20 @@ export default function Fornecedores(): JSX.Element {
           />
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenAdd(false)}>
+            <Button variant="outline" onClick={() => setOpenAdd(false)} className="dark:bg-[#303030] dark:text-white dark:border-[#363636] dark:hover:bg-[#383838]">
               Cancelar
             </Button>
-            <Button onClick={handleAddFornecedor}>Cadastrar</Button>
+            <Button onClick={handleAddFornecedor} className="dark:bg-[#303030] dark:text-[#D9A900] dark:border dark:border-[#363636] dark:hover:bg-[#383838]">Cadastrar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ── MODAL EDITAR ── */}
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-        <DialogContent>
+        <DialogContent className="dark:bg-[#242424] dark:border-[#363636] dark:text-white">
           <DialogHeader>
-            <DialogTitle>Editar Registro</DialogTitle>
-            <DialogDescription className="text-sm text-zinc-500">
+            <DialogTitle className="dark:text-white">Editar Registro</DialogTitle>
+            <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400">
               Altere os campos desejados e salve.
             </DialogDescription>
           </DialogHeader>
@@ -286,19 +288,19 @@ export default function Fornecedores(): JSX.Element {
             <Button variant="outline" onClick={() => setOpenEdit(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleEditSupplier}>Atualizar</Button>
+            <Button onClick={handleEditSupplier} className="dark:bg-[#303030] dark:text-[#D9A900] dark:border dark:border-[#363636] dark:hover:bg-[#383838]">Atualizar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* MODAL EXCLUIR */}
       <Dialog open={openDelete} onOpenChange={setOpenDelete}>
-        <DialogContent>
+        <DialogContent className="dark:bg-[#242424] dark:border-[#363636] dark:text-white">
           <DialogHeader>
-            <DialogTitle>Excluir Fornecedor</DialogTitle>
+            <DialogTitle className="dark:text-white">Excluir Fornecedor</DialogTitle>
           </DialogHeader>
 
-          <p>Deseja realmente excluir este fornecedor?</p>
+          <p className="text-zinc-800 dark:text-white">Deseja realmente excluir este fornecedor?</p>
 
           <DialogFooter>
             <Button variant="destructive" onClick={handleDeleteFornecedor}>

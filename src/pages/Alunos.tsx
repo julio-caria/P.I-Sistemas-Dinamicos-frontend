@@ -71,7 +71,7 @@ const NOVO_ALUNO_INICIAL = {
   cpf: "",
   curso: "",
   email: "",
-  dtMatricula: "", 
+  dtMatricula: "",
 };
 export default function Alunos(): JSX.Element {
   const [alunos, setAlunos] = useState<Aluno[]>([
@@ -81,7 +81,7 @@ export default function Alunos(): JSX.Element {
       cpf: "123.456.789-00",
       curso: "Análise e Desenvolvimento de Sistemas",
       email: "joao@email.com",
-      dtMatricula: "2026-02-01", 
+      dtMatricula: "2026-02-01",
       status: "Ativo",
     },
     {
@@ -110,12 +110,12 @@ export default function Alunos(): JSX.Element {
       cpf: novoAluno.cpf,
       curso: novoAluno.curso,
       email: novoAluno.email,
-      dtMatricula: novoAluno.dtMatricula, 
+      dtMatricula: novoAluno.dtMatricula,
       status: "Ativo",
     };
 
     setAlunos((prev) => [...prev, novo]);
-    setNovoAluno(NOVO_ALUNO_INICIAL); 
+    setNovoAluno(NOVO_ALUNO_INICIAL);
     setOpenAdd(false);
   }
 
@@ -140,15 +140,17 @@ export default function Alunos(): JSX.Element {
   }
 
   return (
-    <div className="flex h-screen bg-zinc-100">
+    <div className="flex h-screen bg-zinc-100 dark:bg-[#181818]">
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Alunos</h2>
+        <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Alunos</h2>
 
         {/* BOTÃO */}
         <div className="flex justify-end mb-6">
           <Button
             onClick={() => setOpenAdd(true)}
-            className="bg-blue-900 cursor-pointer hover:brightness-115"
+            className="bg-blue-900 cursor-pointer hover:brightness-115
+                       dark:bg-[#242424] dark:hover:bg-[#303030]
+                       dark:text-[#D9A900] dark:border dark:border-[#363636]"
           >
             <Plus size={18} />
             <span>Matricular Aluno</span>
@@ -156,33 +158,54 @@ export default function Alunos(): JSX.Element {
         </div>
 
         {/* TABELA */}
-        <Table className="bg-white p-3 rounded-md">
+
+        <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
           <TableHeader>
-            <TableRow>
-              <TableHead className="text-zinc-800 font-bold">Nome</TableHead>
-              <TableHead className="text-zinc-800 font-bold">CPF</TableHead>
-              <TableHead className="text-zinc-800 font-bold">E-mail</TableHead>
-              <TableHead className="text-zinc-800 font-bold">Curso</TableHead>
-              <TableHead className="text-zinc-800 font-bold">
+            <TableRow className="dark:border-zinc-700">
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Nome</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">CPF</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">E-mail</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Curso</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
                 Data de Matrícula
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">Status</TableHead>
-              <TableHead className="text-zinc-800 font-bold">Ações</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Status</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Ações</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {alunos.map((aluno) => (
-              <TableRow key={aluno.id}>
-                <TableCell>{aluno.nome}</TableCell>
-                <TableCell>{aluno.cpf}</TableCell>
-                <TableCell>{aluno.email}</TableCell>
-                <TableCell>{aluno.curso}</TableCell>
-                <TableCell>{formatarData(aluno.dtMatricula)}</TableCell>
-                <TableCell>{aluno.status}</TableCell>
+              <TableRow
+                key={aluno.id}
+                className="dark:border-zinc-700 dark:hover:bg-[#303030]"
+              >
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {aluno.nome}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {aluno.cpf}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {aluno.email}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {aluno.curso}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {formatarData(aluno.dtMatricula)}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {aluno.status}
+                </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 dark:text-white dark:hover:bg-[#383838]"
+                      >
                         <MoreHorizontalIcon />
                         <span className="sr-only">Abrir menu</span>
                       </Button>
@@ -215,6 +238,7 @@ export default function Alunos(): JSX.Element {
             ))}
           </TableBody>
         </Table>
+
       </main>
 
       {/* ── MODAL ADICIONAR ── */}

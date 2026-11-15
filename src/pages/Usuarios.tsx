@@ -122,16 +122,18 @@ export default function Usuarios(): JSX.Element {
   }
 
   return (
-    <div className="flex h-screen bg-zinc-100">
+    <div className="flex h-screen bg-zinc-100 dark:bg-[#181818]">
       {/* CONTEÚDO */}
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Usuários</h2>
+        <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Usuários</h2>
 
         {/* BOTÃO ADICIONAR */}
         <div className="flex justify-end mb-6">
           <Button
             onClick={() => setOpenAdd(true)}
-            className="bg-blue-900 cursor-pointer hover:brightness-115"
+            className="bg-blue-900 cursor-pointer hover:brightness-115
+                       dark:bg-[#242424] dark:hover:bg-[#303030]
+                       dark:text-[#D9A900] dark:border dark:border-[#363636]"
           >
             <Plus size={18} />
             <span>Cadastrar Usuário</span>
@@ -139,23 +141,23 @@ export default function Usuarios(): JSX.Element {
         </div>
 
         {/* TABELA */}
-        <Table className="bg-white p-3 rounded-md">
+        <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
           <TableHeader>
             <TableRow>
-              <TableHead className="text-zinc-800 font-bold">Nome</TableHead>
-              <TableHead className="text-zinc-800 font-bold">E-mail</TableHead>
-              <TableHead className="text-zinc-800 font-bold">Role</TableHead>
-              <TableHead className="text-zinc-800 font-bold">Status</TableHead>
-              <TableHead className="text-zinc-800 font-bold">Ações</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Nome</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">E-mail</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Role</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Status</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {usuarios.map((usuario) => (
-              <TableRow key={usuario.id}>
-                <TableCell>{usuario.nome}</TableCell>
-                <TableCell>{usuario.email}</TableCell>
-                <TableCell>{usuario.role}</TableCell>
-                <TableCell>{usuario.status}</TableCell>
+              <TableRow key={usuario.id} className="dark:border-zinc-700 dark:hover:bg-[#303030]">
+                <TableCell className="text-zinc-800 dark:text-white">{usuario.nome}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{usuario.email}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{usuario.role}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{usuario.status}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

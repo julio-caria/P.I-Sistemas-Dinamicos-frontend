@@ -151,16 +151,18 @@ export default function Docentes(): JSX.Element {
   }
 
   return (
-    <div className="flex h-screen bg-zinc-100">
+    <div className="flex h-screen bg-zinc-100 dark:bg-[#181818]">
       {/* CONTEÚDO */}
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Docentes</h2>
+        <h2 className="text-2xl font-bold mb-6 dark:text-white">Docentes</h2>
 
         {/* BOTÃO */}
         <div className="flex justify-end mb-6">
           <Button
             onClick={() => setOpenAdd(true)}
-            className="bg-blue-900 cursor-pointer hover:brightness-115"
+            className="bg-blue-900 cursor-pointer hover:brightness-115
+                       dark:bg-[#242424] dark:hover:bg-[#303030]
+                       dark:text-[#D9A900] dark:border dark:border-[#363636]"
           >
             <Plus size={18} />
             <span>Cadastrar Docente</span>
@@ -168,41 +170,41 @@ export default function Docentes(): JSX.Element {
         </div>
 
         {/* TABELA */}
-        <Table className="bg-white p-3 rounded-md">
+        <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
           <TableHeader>
             <TableRow>
-              <TableHead className="text-zinc-800 font-bold">Nome</TableHead>
-              <TableHead className="text-zinc-800 font-bold">CPF</TableHead>
-              <TableHead className="text-zinc-800 font-bold">E-mail</TableHead>
-              <TableHead className="text-zinc-800 font-bold">
+              <TableHead className="text-zinc-800 font-bold dark:text-white">Nome</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">CPF</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">E-mail</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Endereço
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Matricula Funcional
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Titulação
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold">Curso</TableHead>
-              <TableHead className="text-zinc-800 font-bold">Status</TableHead>
-              <TableHead className="text-zinc-800 font-bold">Ações</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">Curso</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">Status</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {docentes.map((docente) => (
-              <TableRow key={docente.id}>
-                <TableCell>{docente.nome}</TableCell>
-                <TableCell>{docente.cpf}</TableCell>
-                <TableCell>{docente.email}</TableCell>
-                <TableCell>{docente.endereco}</TableCell>
-                <TableCell>{docente.matriculaFuncional}</TableCell>
-                <TableCell>{docente.titulacao}</TableCell>
-                <TableCell>{docente.curso}</TableCell>
-                <TableCell>{docente.status}</TableCell>
-                <TableCell>
+              <TableRow key={docente.id} className="dark:border-zinc-700 dark:hover:bg-[#303030]">
+                <TableCell className="text-zinc-800 dark:text-white">{docente.nome}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{docente.cpf}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{docente.email}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{docente.endereco}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{docente.matriculaFuncional}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{docente.titulacao}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{docente.curso}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{docente.status}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8">
+                      <Button variant="ghost" size="icon" className="size-8 dark:text-white dark:hover:bg-[#383838]">
                         <MoreHorizontalIcon />
                         <span className="sr-only">Abrir menu</span>
                       </Button>
@@ -239,10 +241,10 @@ export default function Docentes(): JSX.Element {
 
       {/* ── MODAL ADICIONAR ── */}
       <Dialog open={openAdd} onOpenChange={setOpenAdd}>
-        <DialogContent>
+        <DialogContent className="dark:bg-[#242424] dark:border-[#363636] dark:text-white">
           <DialogHeader>
-            <DialogTitle>Cadastrar Docente</DialogTitle>
-            <DialogDescription className="text-sm text-zinc-500">
+            <DialogTitle className="dark:text-white">Cadastrar Docente</DialogTitle>
+            <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400">
               Preencha os campos para cadastrar um docente.
             </DialogDescription>
           </DialogHeader>
@@ -255,7 +257,7 @@ export default function Docentes(): JSX.Element {
           />
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenAdd(false)}>
+            <Button variant="outline" onClick={() => setOpenAdd(false)} className="dark:bg-[#303030] dark:text-white dark:border-[#363636] dark:hover:bg-[#383838]">
               Cancelar
             </Button>
             <Button onClick={handleAddDocente}>Cadastrar</Button>
@@ -293,7 +295,7 @@ export default function Docentes(): JSX.Element {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenEdit(false)}>
+            <Button variant="outline" onClick={() => setOpenEdit(false)} className="dark:bg-[#303030] dark:text-white dark:border-[#363636] dark:hover:bg-[#383838]">
               Cancelar
             </Button>
             <Button onClick={handleEditDocente}>Atualizar</Button>
@@ -308,7 +310,7 @@ export default function Docentes(): JSX.Element {
             <DialogTitle>Excluir Registro</DialogTitle>
           </DialogHeader>
 
-          <p>Deseja realmente excluir este registro?</p>
+          <p className="text-zinc-800 dark:text-white">Deseja realmente excluir este registro?</p>
 
           <DialogFooter>
             <Button variant="destructive" onClick={handleDeleteDocente}>
@@ -341,7 +343,7 @@ function DocenteFormFields({
   return (
     <div className="space-y-4">
       <Field>
-        <FieldLabel htmlFor="teacherName">Nome do Docente</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="teacherName" >Nome do Docente</FieldLabel>
         <Input
           id="teacherName"
           autoComplete="off"
@@ -349,10 +351,12 @@ function DocenteFormFields({
           required
           value={values.nome}
           onChange={(e) => onChange("nome", e.target.value)}
+          className="dark:bg-[#181818] dark:text-white dark:border-[#363636]
+                     dark:placeholder:text-zinc-500"
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor="cpf">CPF</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="cpf">CPF</FieldLabel>
         <Input
           id="cpf"
           autoComplete="off"
@@ -361,10 +365,12 @@ function DocenteFormFields({
           required
           maxLength={11}
           onChange={(e) => onChange("cpf", e.target.value)}
+          className="dark:bg-[#181818] dark:text-white dark:border-[#363636]
+                     dark:placeholder:text-zinc-500"
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor="email">E-mail</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="email">E-mail</FieldLabel>
         <Input
           id="email"
           type="email"
@@ -372,11 +378,13 @@ function DocenteFormFields({
           required
           placeholder="docente@email.com"
           value={values.email}
-          onChange={(e) => onChange("email", e.target.value)}
+          onChange={(e) => onChange("email", e.target.value)} 
+          className="dark:bg-[#181818] dark:text-white dark:border-[#363636]
+                     dark:placeholder:text-zinc-500"
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor="address">Endereço</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="address">Endereço</FieldLabel>
         <Input
           id="address"
           autoComplete="off"
@@ -384,10 +392,12 @@ function DocenteFormFields({
           value={values.endereco}
           required
           onChange={(e) => onChange("endereco", e.target.value)}
+          className="dark:bg-[#181818] dark:text-white dark:border-[#363636]
+                     dark:placeholder:text-zinc-500"
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor="functionEnrollment">
+        <FieldLabel className="dark:text-white" htmlFor="functionEnrollment">
           Matrícula Funcional
         </FieldLabel>
         <Input
@@ -397,10 +407,12 @@ function DocenteFormFields({
           value={values.matriculaFuncional}
           required
           onChange={(e) => onChange("matriculaFuncional", e.target.value)}
+          className="dark:bg-[#181818] dark:text-white dark:border-[#363636]
+                     dark:placeholder:text-zinc-500"
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor="titration">Titulação</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="titration">Titulação</FieldLabel>
         <Select
           value={values.titulacao}
           onValueChange={(value) => onChange("titulacao", value)}
@@ -421,7 +433,7 @@ function DocenteFormFields({
         </Select>
       </Field>
       <Field>
-        <FieldLabel htmlFor="course">Curso</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="course">Curso</FieldLabel>
         <Select
           value={values.curso}
           onValueChange={(value) => onChange("curso", value)}

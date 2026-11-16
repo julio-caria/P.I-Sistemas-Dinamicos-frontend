@@ -9,7 +9,7 @@ export function ThemeProvider({
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="light"
+      defaultTheme="white"
       enableSystem
     >
       {children}

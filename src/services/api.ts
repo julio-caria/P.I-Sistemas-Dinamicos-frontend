@@ -8,26 +8,29 @@ function getToken() {
   );
 }
 
+
 async function apiFetch(
-  endpoint: string,
-  options: RequestInit = {}
+    endpoint: string,
+    options: RequestInit = {}
 ) {
-  const token = getToken();
+    const token = getToken();
 
-  const headers = new Headers(options.headers);
+    const headers = new Headers(options.headers);
 
-  headers.set("Content-Type", "application/json");
+    if (options.body !== undefined && options.body !== null) {
+        headers.set("Content-Type", "application/json");
+    }
 
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+    if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+    }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+    });
 
-  return response;
+    return response;
 }
 
 export { API_URL, apiFetch };

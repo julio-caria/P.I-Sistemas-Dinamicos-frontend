@@ -73,3 +73,18 @@ export async function cadastrarUsuario(
 
     return data;
 }
+
+export async function excluirUsuario(id: string): Promise<void> {
+    const response = await apiFetch(`/api/v1/users/${id}`, {
+        method: "DELETE",
+    });
+
+    if (!response.ok) {
+        const data = await response.json().catch(() => null);
+
+        throw new Error(
+            data?.message || "Não foi possível excluir o usuário."
+        );
+    }
+}
+

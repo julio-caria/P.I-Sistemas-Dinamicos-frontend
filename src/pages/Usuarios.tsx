@@ -42,6 +42,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import {
   listarUsuarios,
   cadastrarUsuario,
+  excluirUsuario,
 } from "@/services/userService";
 
 type Usuario = {
@@ -79,6 +80,8 @@ export default function Usuarios(): JSX.Element {
   const [erroCadastro, setErroCadastro] = useState("");
   const [senhaTemporaria, setSenhaTemporaria] = useState("");
   const [emailInstitucional, setEmailInstitucional] = useState("");
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExclusao, setErroExclusao] = useState("");
 
   useEffect(() => {
     async function carregarUsuarios() {
@@ -183,10 +186,37 @@ export default function Usuarios(): JSX.Element {
     setOpenEdit(false);
   }
 
-  function handleDeleteUser() {
+
+  async function handleDeleteUser() {
     if (!selectedUser) return;
-    setUsuarios((prev) => prev.filter((u) => u.id !== selectedUser.id));
-    setOpenDelete(false);
+
+    try {
+      setExcluindo(true);
+      setErroExclusao("");
+
+      await excluirUsuario(selectedUser.id);
+
+      // Atualiza o status do usuário após confirmação do backend.
+      setUsuarios((prev) =>
+        prev.map((usuario) =>
+          usuario.id === selectedUser.id
+            ? { ...usuario, status: "Inativo" }
+            : usuario
+        )
+      );
+
+      setOpenDelete(false);
+      setSelectedUser(null);
+
+    } catch (error) {
+      setErroExclusao(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível excluir o usuário."
+      );
+    } finally {
+      setExcluindo(false);
+    }
   }
 
   return (
@@ -468,25 +498,54 @@ export default function Usuarios(): JSX.Element {
         </DialogContent>
       </Dialog>
 
+
       {/* MODAL EXCLUIR */}
-      <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+      <Dialog
+        open={openDelete}
+        onOpenChange={(open) => {
+          if (!excluindo) {
+            setOpenDelete(open);
+            if (!open) setErroExclusao("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Excluir Usuário</DialogTitle>
+            <DialogDescription>
+              Deseja realmente inativar este usuário?
+              Essa ação não apagará o registro do banco de dados.
+            </DialogDescription>
           </DialogHeader>
 
-          <p>Deseja realmente excluir este usuário?</p>
+          {erroExclusao && (
+            <p className="text-sm text-red-500">
+              {erroExclusao}
+            </p>
+          )}
 
           <DialogFooter>
-            <Button variant="destructive" onClick={handleDeleteUser}>
-              Excluir
+            <Button
+              variant="outline"
+              onClick={() => setOpenDelete(false)}
+              disabled={excluindo}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              variant="destructive"
+              onClick={handleDeleteUser}
+              disabled={excluindo}
+            >
+              {excluindo ? "Excluindo..." : "Excluir"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
-
 
   type UserFormValues = {
     nome: string;

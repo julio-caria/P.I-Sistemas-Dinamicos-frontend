@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"; import {
   Plus,
   MoreHorizontalIcon,
   Trash,
+  Search,
+  RotateCcw,
 } from "lucide-react";
 import type { JSX } from "react";
 import {
@@ -49,6 +51,7 @@ type Usuario = {
   id: string;
   nome: string;
   email: string;
+  emailPessoal: string;
   role: string;
   status: "Ativo" | "Inativo";
 };
@@ -82,6 +85,16 @@ export default function Usuarios(): JSX.Element {
   const [emailInstitucional, setEmailInstitucional] = useState("");
   const [excluindo, setExcluindo] = useState(false);
   const [erroExclusao, setErroExclusao] = useState("");
+  const [busca, setBusca] = useState("");
+  const usuariosFiltrados = usuarios.filter((usuario) => {
+    const termo = busca.trim().toLocaleLowerCase("pt-BR");
+
+    return (
+      usuario.nome.toLocaleLowerCase("pt-BR").includes(termo) ||
+      usuario.email.toLocaleLowerCase("pt-BR").includes(termo) ||
+      usuario.emailPessoal?.toLocaleLowerCase("pt-BR").includes(termo)
+    );
+  });
 
   useEffect(() => {
     async function carregarUsuarios() {
@@ -95,6 +108,7 @@ export default function Usuarios(): JSX.Element {
           id: usuario.id,
           nome: usuario.name || `${usuario.firstName} ${usuario.lastName}`,
           email: usuario.email,
+          emailPessoal: usuario.personalEmail,
           role: usuario.role,
           status: usuario.isActive ? "Ativo" : "Inativo",
         }));
@@ -122,8 +136,6 @@ export default function Usuarios(): JSX.Element {
   const [openDelete, setOpenDelete] = useState(false);
 
   const [novoUsuario, setNovoUsuario] = useState(NOVO_USUARIO_INICIAL);
-
-
 
   async function handleAddUser() {
     if (
@@ -157,6 +169,7 @@ export default function Usuarios(): JSX.Element {
           id: usuario.id,
           nome: usuario.name || `${usuario.firstName} ${usuario.lastName}`,
           email: usuario.email,
+          emailPessoal: usuario.personalEmail,
           role: usuario.role,
           status: usuario.isActive ? "Ativo" : "Inativo",
         }));
@@ -225,8 +238,31 @@ export default function Usuarios(): JSX.Element {
       <main className="flex-1 p-8 overflow-auto">
         <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Usuários</h2>
 
-        {/* BOTÃO ADICIONAR */}
-        <div className="flex justify-end mb-6">
+
+        {/* BUSCA E BOTÃO ADICIONAR */}
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+
+              <Input
+                placeholder="Buscar por nome ou e-mail..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={() => setBusca("")}
+              disabled={!busca}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </div>
+
           <Button
             onClick={() => {
               setNovoUsuario(NOVO_USUARIO_INICIAL);
@@ -236,12 +272,13 @@ export default function Usuarios(): JSX.Element {
               setOpenAdd(true);
             }}
             className="bg-blue-900 cursor-pointer hover:brightness-115
-                       dark:bg-[#242424] dark:hover:bg-[#303030]
-                       dark:text-[#D9A900] dark:border dark:border-[#363636]"
+               dark:bg-[#242424] dark:hover:bg-[#303030]
+               dark:text-[#D9A900] dark:border dark:border-[#363636]"
           >
             <Plus size={18} />
             <span>Cadastrar Usuário</span>
           </Button>
+
         </div>
 
         {/* TABELA */}
@@ -269,14 +306,16 @@ export default function Usuarios(): JSX.Element {
                   {erro}
                 </TableCell>
               </TableRow>
-            ) : usuarios.length === 0 ? (
+            ) : usuariosFiltrados.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-6">
-                  Nenhum usuário encontrado.
+                  {busca
+                    ? "Nenhum usuário corresponde à busca."
+                    : "Nenhum usuário cadastrado."}
                 </TableCell>
               </TableRow>
             ) : (
-              usuarios.map((usuario) => (
+              usuariosFiltrados.map((usuario) => (
                 <TableRow
                   key={usuario.id}
                   className="dark:border-zinc-700 dark:hover:bg-[#303030]"

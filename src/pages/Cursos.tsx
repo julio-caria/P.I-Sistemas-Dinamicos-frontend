@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { Pencil, Plus, MoreHorizontalIcon, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  getCourses,
+  createCourse,
+  deleteCourse,
+} from "@/services/courseService";
+import type { Course } from "@/services/courseService";
+import { Pencil, Plus, MoreHorizontalIcon, Trash, Search } from "lucide-react";
 import type { JSX } from "react";
 import {
   Dialog,
@@ -37,11 +43,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type Curso = {
-  id: number;
+  id: string;
   nome: string;
   modalidade: string;
-  cargaHoraria: string;
-  semestres: string;
+  cargaHoraria: number;
+  semestres: number;
   docente: string;
   status: "Ativo" | "Inativo";
 };
@@ -69,26 +75,18 @@ const docentes: Docente[] = [
 ];
 
 export default function Cursos(): JSX.Element {
-  const [cursos, setCursos] = useState<Curso[]>([
-    {
-      id: 1,
-      nome: "Análise e Desenvolvimento de Sistemas",
-      modalidade: "EAD",
-      semestres: "5",
-      cargaHoraria: "2400",
-      docente: "Ana Paula Silva",
-      status: "Ativo",
-    },
-    {
-      id: 2,
-      nome: "Administração",
-      modalidade: "Presencial",
-      semestres: "5",
-      cargaHoraria: "3000",
-      docente: "Marcos Paulo César",
-      status: "Ativo",
-    },
-  ]);
+  const [cursos, setCursos] = useState<Curso[]>([]);
+
+  const [busca, setBusca] = useState("");
+
+  const cursosFiltrados = cursos.filter((curso) => {
+    const termo = busca.toLowerCase().trim();
+
+    return (
+      curso.nome.toLowerCase().includes(termo) ||
+      curso.modalidade.toLowerCase().includes(termo)
+    );
+  });
 
   const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null);
 
@@ -104,36 +102,128 @@ export default function Cursos(): JSX.Element {
     docente: "",
   });
 
-  function handleAddCurso() {
-    const novo: Curso = {
-      id: Date.now(),
-      nome: novoCurso.nome,
-      modalidade: novoCurso.modalidade,
-      semestres: novoCurso.semestres,
-      cargaHoraria: novoCurso.cargaHoraria,
-      docente: novoCurso.docente,
-      status: "Ativo",
-    };
+  useEffect(() => {
+    async function carregarCursos() {
+      try {
+        const data = await getCourses();
 
-    setCursos((prev) => [...prev, novo]);
+        const cursosFormatados: Curso[] = data.map((curso: Course) => ({
+          id: curso.id,
+          nome: curso.name,
+          modalidade:
+            curso.modality === "in_person"
+              ? "Presencial"
+              : curso.modality === "online"
+                ? "EAD"
+                : "Híbrido",
+          cargaHoraria: curso.workloadHours,
+          semestres: curso.durationSemesters,
+          docente: "Não atribuído",
+          status: curso.isActive ? "Ativo" : "Inativo",
+        }));
 
-    setNovoCurso({
-      nome: "",
-      modalidade: "",
-      semestres: "0",
-      cargaHoraria: "0",
-      docente: "",
-    });
+        setCursos(cursosFormatados);
+      } catch (error) {
+        console.error("Erro ao carregar cursos:", error);
+      }
+    }
 
-    setOpenAdd(false);
+    carregarCursos();
+  }, []);
+
+  async function handleAddCurso() {
+    try {
+      const semestres = Number(novoCurso.semestres);
+      const cargaHoraria = Number(novoCurso.cargaHoraria);
+
+      if (
+        !novoCurso.nome.trim() ||
+        !novoCurso.modalidade ||
+        !Number.isFinite(semestres) ||
+        !Number.isFinite(cargaHoraria) ||
+        semestres < 1 ||
+        cargaHoraria < 1
+      ) {
+        alert("Preencha todos os campos corretamente.");
+        return;
+      }
+
+      await createCourse({
+        name: novoCurso.nome.trim(),
+        workloadHours: cargaHoraria,
+        durationSemesters: semestres,
+        modality:
+          novoCurso.modalidade === "Presencial"
+            ? "in_person"
+            : novoCurso.modalidade === "EAD"
+              ? "online"
+              : "hybrid",
+      });
+
+      const data = await getCourses();
+
+      const cursosFormatados: Curso[] = data.map((curso: Course) => ({
+        id: curso.id,
+        nome: curso.name,
+        modalidade:
+          curso.modality === "in_person"
+            ? "Presencial"
+            : curso.modality === "online"
+              ? "EAD"
+              : "Híbrido",
+        cargaHoraria: curso.workloadHours,
+        semestres: curso.durationSemesters,
+        docente: "Não atribuído",
+        status: curso.isActive ? "Ativo" : "Inativo",
+      }));
+
+      setCursos(cursosFormatados);
+
+      setNovoCurso({
+        nome: "",
+        modalidade: "",
+        semestres: "1",
+        cargaHoraria: "1",
+        docente: "",
+      });
+
+      setOpenAdd(false);
+    } catch (error) {
+      console.error("Erro ao cadastrar curso:", error);
+      alert("Não foi possível cadastrar o curso.");
+    }
   }
 
-  function handleDeleteCurso() {
+  async function handleDeleteCurso() {
     if (!selectedCurso) return;
 
-    setCursos((prev) => prev.filter((c) => c.id !== selectedCurso.id));
+    try {
+      await deleteCourse(selectedCurso.id);
 
-    setOpenDelete(false);
+      const data = await getCourses();
+
+      const cursosFormatados: Curso[] = data.map((curso: Course) => ({
+        id: curso.id,
+        nome: curso.name,
+        modalidade:
+          curso.modality === "in_person"
+            ? "Presencial"
+            : curso.modality === "online"
+              ? "EAD"
+              : "Híbrido",
+        cargaHoraria: curso.workloadHours,
+        semestres: curso.durationSemesters,
+        docente: "Não atribuído",
+        status: curso.isActive ? "Ativo" : "Inativo",
+      }));
+
+      setCursos(cursosFormatados);
+      setOpenDelete(false);
+      setSelectedCurso(null);
+    } catch (error) {
+      console.error("Erro ao excluir curso:", error);
+      alert("Não foi possível excluir o curso.");
+    }
   }
 
   return (
@@ -142,13 +232,27 @@ export default function Cursos(): JSX.Element {
       <main className="flex-1 p-8 overflow-auto">
         <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Cursos</h2>
 
-        {/* BOTÃO */}
-        <div className="flex justify-end mb-6">
+        {/* BUSCA E BOTÃO */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="relative w-full max-w-md">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+            />
+
+            <Input
+              placeholder="Buscar por nome ou modalidade..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="pl-10 bg-white dark:bg-[#242424] dark:text-white"
+            />
+          </div>
+
           <Button
             onClick={() => setOpenAdd(true)}
             className="bg-blue-900 cursor-pointer hover:brightness-115
-                       dark:bg-[#242424] dark:hover:bg-[#303030]
-                       dark:text-[#D9A900] dark:border dark:border-[#363636]"
+               dark:bg-[#242424] dark:hover:bg-[#303030]
+               dark:text-[#D9A900] dark:border dark:border-[#363636]"
           >
             <Plus size={18} />
             <span>Cadastrar Curso</span>
@@ -166,12 +270,16 @@ export default function Cursos(): JSX.Element {
               <TableHead className="text-zinc-800 dark:text-white font-bold">Modalidade</TableHead>
               <TableHead className="text-zinc-800 dark:text-white font-bold">Semestres</TableHead>
               <TableHead className="text-zinc-800 dark:text-white font-bold">Carga Horária</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Status
+              </TableHead>
               <TableHead className="text-zinc-800 dark:text-white font-bold text-right">Ações</TableHead>
+
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {cursos.map((curso) => (
+            {cursosFiltrados.map((curso) => (
               <TableRow
                 key={curso.id}
                 className="dark:border-zinc-700 dark:hover:bg-[#303030]"
@@ -190,6 +298,9 @@ export default function Cursos(): JSX.Element {
                 </TableCell>
                 <TableCell className="text-zinc-800 dark:text-white">
                   {curso.cargaHoraria}
+                </TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {curso.status}
                 </TableCell>
 
                 <TableCell className="text-right">

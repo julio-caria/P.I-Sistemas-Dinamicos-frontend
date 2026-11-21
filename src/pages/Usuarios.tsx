@@ -1,5 +1,4 @@
-import { useState } from "react";
-import {
+import { useEffect, useState } from "react"; import {
   Pencil,
   Plus,
   MoreHorizontalIcon,
@@ -40,9 +39,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  listarUsuarios,
+  cadastrarUsuario,
+} from "@/services/userService";
 
 type Usuario = {
-  id: number;
+  id: string;
   nome: string;
   email: string;
   role: string;
@@ -62,28 +65,52 @@ const roles: CargoUsuario[] = [
 ];
 
 const NOVO_USUARIO_INICIAL = {
-  nome: "",
-  email: "",
-  role: "",
+  firstName: "",
+  lastName: "",
+  personalEmail: "",
 };
 
 export default function Usuarios(): JSX.Element {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([
-    {
-      id: 1,
-      nome: "REGISTRO",
-      email: "registro@email.com",
-      role: "Secretaria",
-      status: "Ativo",
-    },
-    {
-      id: 2,
-      nome: "REGISTRO",
-      email: "registro123@email.com",
-      role: "Secretaria",
-      status: "Ativo",
-    },
-  ]);
+
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+  const [cadastrando, setCadastrando] = useState(false);
+  const [erroCadastro, setErroCadastro] = useState("");
+  const [senhaTemporaria, setSenhaTemporaria] = useState("");
+  const [emailInstitucional, setEmailInstitucional] = useState("");
+
+  useEffect(() => {
+    async function carregarUsuarios() {
+      try {
+        setCarregando(true);
+        setErro("");
+
+        const dados = await listarUsuarios();
+
+        const usuariosFormatados: Usuario[] = dados.map((usuario) => ({
+          id: usuario.id,
+          nome: usuario.name || `${usuario.firstName} ${usuario.lastName}`,
+          email: usuario.email,
+          role: usuario.role,
+          status: usuario.isActive ? "Ativo" : "Inativo",
+        }));
+
+        setUsuarios(usuariosFormatados);
+      } catch (error) {
+        setErro(
+          error instanceof Error
+            ? error.message
+            : "Não foi possível carregar os usuários."
+        );
+      } finally {
+        setCarregando(false);
+      }
+    }
+
+    carregarUsuarios();
+  }, []);
+
 
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
 
@@ -93,18 +120,59 @@ export default function Usuarios(): JSX.Element {
 
   const [novoUsuario, setNovoUsuario] = useState(NOVO_USUARIO_INICIAL);
 
-  function handleAddUser() {
-    const novo: Usuario = {
-      id: Date.now(),
-      nome: novoUsuario.nome,
-      email: novoUsuario.email,
-      role: novoUsuario.role,
-      status: "Ativo",
-    };
 
-    setUsuarios((prev) => [...prev, novo]);
-    setNovoUsuario(NOVO_USUARIO_INICIAL);
-    setOpenAdd(false);
+
+  async function handleAddUser() {
+    if (
+      !novoUsuario.firstName.trim() ||
+      !novoUsuario.lastName.trim() ||
+      !novoUsuario.personalEmail.trim()
+    ) {
+      setErroCadastro("Preencha todos os campos.");
+      return;
+    }
+
+    try {
+      setCadastrando(true);
+      setErroCadastro("");
+
+      const resultado = await cadastrarUsuario({
+        firstName: novoUsuario.firstName.trim(),
+        lastName: novoUsuario.lastName.trim(),
+        personalEmail: novoUsuario.personalEmail.trim(),
+      });
+
+      // Armazena os dados retornados pelo cadastro.
+      setSenhaTemporaria(resultado.temporaryPassword);
+      setEmailInstitucional(resultado.email);
+
+      // Atualiza a listagem sem comprometer o resultado do cadastro.
+      try {
+        const dados = await listarUsuarios();
+
+        const usuariosFormatados: Usuario[] = dados.map((usuario) => ({
+          id: usuario.id,
+          nome: usuario.name || `${usuario.firstName} ${usuario.lastName}`,
+          email: usuario.email,
+          role: usuario.role,
+          status: usuario.isActive ? "Ativo" : "Inativo",
+        }));
+
+        setUsuarios(usuariosFormatados);
+      } catch {
+        // O cadastro foi concluído mesmo se a atualização falhar.
+        setErro("Cadastro realizado, mas não foi possível atualizar a listagem.");
+      }
+
+    } catch (error) {
+      setErroCadastro(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível cadastrar o usuário."
+      );
+    } finally {
+      setCadastrando(false);
+    }
   }
 
   function handleEditUser() {
@@ -130,7 +198,13 @@ export default function Usuarios(): JSX.Element {
         {/* BOTÃO ADICIONAR */}
         <div className="flex justify-end mb-6">
           <Button
-            onClick={() => setOpenAdd(true)}
+            onClick={() => {
+              setNovoUsuario(NOVO_USUARIO_INICIAL);
+              setErroCadastro("");
+              setSenhaTemporaria("");
+              setEmailInstitucional("");
+              setOpenAdd(true);
+            }}
             className="bg-blue-900 cursor-pointer hover:brightness-115
                        dark:bg-[#242424] dark:hover:bg-[#303030]
                        dark:text-[#D9A900] dark:border dark:border-[#363636]"
@@ -151,76 +225,214 @@ export default function Usuarios(): JSX.Element {
               <TableHead className="text-zinc-800 dark:text-white font-bold">Ações</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
-            {usuarios.map((usuario) => (
-              <TableRow key={usuario.id} className="dark:border-zinc-700 dark:hover:bg-[#303030]">
-                <TableCell className="text-zinc-800 dark:text-white">{usuario.nome}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{usuario.email}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{usuario.role}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{usuario.status}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8">
-                        <MoreHorizontalIcon />
-                        <span className="sr-only">Abrir menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedUser(usuario);
-                          setOpenEdit(true);
-                        }}
-                      >
-                        <Pencil size={12} />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => {
-                          setSelectedUser(usuario);
-                          setOpenDelete(true);
-                        }}
-                      >
-                        <Trash size={12} />
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {carregando ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-6">
+                  Carregando usuários...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : erro ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-red-500 py-6">
+                  {erro}
+                </TableCell>
+              </TableRow>
+            ) : usuarios.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-6">
+                  Nenhum usuário encontrado.
+                </TableCell>
+              </TableRow>
+            ) : (
+              usuarios.map((usuario) => (
+                <TableRow
+                  key={usuario.id}
+                  className="dark:border-zinc-700 dark:hover:bg-[#303030]"
+                >
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {usuario.nome}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {usuario.email}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {usuario.role}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {usuario.status}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="size-8">
+                          <MoreHorizontalIcon />
+                          <span className="sr-only">Abrir menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedUser(usuario);
+                            setOpenEdit(true);
+                          }}
+                        >
+                          <Pencil size={12} />
+                          Editar
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => {
+                            setSelectedUser(usuario);
+                            setOpenDelete(true);
+                          }}
+                        >
+                          <Trash size={12} />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </main>
 
       {/* ── MODAL ADICIONAR ── */}
-      <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+
+      <Dialog
+        open={openAdd}
+        onOpenChange={(open) => {
+          if (!cadastrando) {
+            setOpenAdd(open);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cadastrar Usuário</DialogTitle>
+            <DialogTitle>
+              {senhaTemporaria ? "Usuário cadastrado!" : "Cadastrar Usuário"}
+            </DialogTitle>
+
             <DialogDescription className="text-sm text-zinc-500">
-              Preencha os campos para cadastrar um usuario.
+              {senhaTemporaria
+                ? "O cadastro foi realizado com sucesso. Guarde a senha temporária."
+                : "Preencha os campos para cadastrar um usuário."}
             </DialogDescription>
           </DialogHeader>
 
-          <UsuarioFormFields
-            values={novoUsuario}
-            onChange={(field, value) =>
-              setNovoUsuario((prev) => ({ ...prev, [field]: value }))
-            }
-          />
+          {senhaTemporaria ? (
+            <div className="space-y-3">
+              <Field>
+                <FieldLabel>E-mail institucional</FieldLabel>
+                <Input value={emailInstitucional} readOnly />
+              </Field>
+
+              <Field>
+                <FieldLabel>Senha temporária</FieldLabel>
+                <Input type="text" value={senhaTemporaria} readOnly />
+              </Field>
+
+              <p className="text-sm text-amber-600">
+                Guarde essa senha. O usuário deverá alterá-la no primeiro acesso.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Field>
+                <FieldLabel htmlFor="firstName">Nome</FieldLabel>
+                <Input
+                  id="firstName"
+                  placeholder="Carlos"
+                  value={novoUsuario.firstName}
+                  onChange={(e) =>
+                    setNovoUsuario((prev) => ({
+                      ...prev,
+                      firstName: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="lastName">Sobrenome</FieldLabel>
+                <Input
+                  id="lastName"
+                  placeholder="Oliveira"
+                  value={novoUsuario.lastName}
+                  onChange={(e) =>
+                    setNovoUsuario((prev) => ({
+                      ...prev,
+                      lastName: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="personalEmail">E-mail pessoal</FieldLabel>
+                <Input
+                  id="personalEmail"
+                  type="email"
+                  placeholder="usuario@email.com"
+                  value={novoUsuario.personalEmail}
+                  onChange={(e) =>
+                    setNovoUsuario((prev) => ({
+                      ...prev,
+                      personalEmail: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+            </div>
+          )}
+
+          {erroCadastro && (
+            <p className="text-sm text-red-500">{erroCadastro}</p>
+          )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenAdd(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAddUser}>Cadastrar</Button>
+            {senhaTemporaria ? (
+              <Button
+                onClick={() => {
+                  setOpenAdd(false);
+                  setNovoUsuario(NOVO_USUARIO_INICIAL);
+                  setSenhaTemporaria("");
+                  setEmailInstitucional("");
+                  setErroCadastro("");
+                }}
+              >
+                Concluir
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenAdd(false)}
+                  disabled={cadastrando}
+                >
+                  Cancelar
+                </Button>
+
+                <Button
+                  onClick={handleAddUser}
+                  disabled={cadastrando}
+                >
+                  {cadastrando ? "Cadastrando..." : "Cadastrar"}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* ── MODAL EDITAR ── */}
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
@@ -274,67 +486,68 @@ export default function Usuarios(): JSX.Element {
       </Dialog>
     </div>
   );
-}
 
-type UserFormValues = {
-  nome: string;
-  email: string;
-  role: string;
-};
 
-function UsuarioFormFields({
-  values,
-  onChange,
-}: {
-  values: UserFormValues;
-  onChange: (field: keyof UserFormValues, value: string) => void;
-}) {
-  return (
-    <div className="space-y-4">
-      <Field>
-        <FieldLabel htmlFor="teacherName">Nome do Usuario</FieldLabel>
-        <Input
-          id="teacherName"
-          autoComplete="off"
-          placeholder="John Doe"
-          required
-          value={values.nome}
-          onChange={(e) => onChange("nome", e.target.value)}
-        />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="email">E-mail</FieldLabel>
-        <Input
-          id="email"
-          autoComplete="off"
-          type="email"
-          placeholder="usuario@email.com"
-          value={values.email}
-          required
-          onChange={(e) => onChange("email", e.target.value)}
-        />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="roles">Role</FieldLabel>
-        <Select
-          value={values.role}
-          onValueChange={(value) => onChange("role", value)}
-          required
-        >
-          <SelectTrigger id="roles">
-            <SelectValue placeholder="Selecione um título" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {roles.map((role) => (
-                <SelectItem key={role.id} value={role.nome}>
-                  {role.nome}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </Field>
-    </div>
-  );
+  type UserFormValues = {
+    nome: string;
+    email: string;
+    role: string;
+  };
+
+  function UsuarioFormFields({
+    values,
+    onChange,
+  }: {
+    values: UserFormValues;
+    onChange: (field: keyof UserFormValues, value: string) => void;
+  }) {
+    return (
+      <div className="space-y-4">
+        <Field>
+          <FieldLabel htmlFor="teacherName">Nome do Usuario</FieldLabel>
+          <Input
+            id="teacherName"
+            autoComplete="off"
+            placeholder="John Doe"
+            required
+            value={values.nome}
+            onChange={(e) => onChange("nome", e.target.value)}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="email">E-mail</FieldLabel>
+          <Input
+            id="email"
+            autoComplete="off"
+            type="email"
+            placeholder="usuario@email.com"
+            value={values.email}
+            required
+            onChange={(e) => onChange("email", e.target.value)}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="roles">Role</FieldLabel>
+          <Select
+            value={values.role}
+            onValueChange={(value) => onChange("role", value)}
+            required
+          >
+            <SelectTrigger id="roles">
+              <SelectValue placeholder="Selecione um título" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {roles.map((role) => (
+                  <SelectItem key={role.id} value={role.nome}>
+                    {role.nome}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+    );
+  }
 }

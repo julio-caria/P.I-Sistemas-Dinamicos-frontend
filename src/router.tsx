@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import AppLayout from "@/components/layouts/AppLayout";
 import Home from "@/pages/Home";
 import Login from "./pages/Login";
-import Alunos from "./pages/Alunos";
+import Alunos from "./pages/Students";
 import Fornecedores from "./pages/Fornecedores";
 import Docentes from "./pages/Docentes";
 import Cursos from "./pages/Cursos";

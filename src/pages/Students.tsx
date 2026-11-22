@@ -1,4 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getStudents,
+  createStudent,
+  deleteStudent,
+  type Student,
+} from "@/services/studentService";
 import {
   Pencil,
   Plus,
@@ -42,7 +48,7 @@ import {
 } from "@/components/ui/select";
 
 type Aluno = {
-  id: number;
+  id: string;
   nome: string;
   cpf: string;
   curso: string;
@@ -72,28 +78,19 @@ const NOVO_ALUNO_INICIAL = {
   curso: "",
   email: "",
   dtMatricula: "",
+  telefone: "",
+  telefoneSecundario: "",
+  endereco: "",
+  dtNascimento: "",
+  genero: "",
+  nacionalidade: "",
+  naturalidade: "",
+  fotoUrl: "",
+  contatoEmergencia: "",
 };
+
 export default function Alunos(): JSX.Element {
-  const [alunos, setAlunos] = useState<Aluno[]>([
-    {
-      id: 1,
-      nome: "João Gabriel",
-      cpf: "123.456.789-00",
-      curso: "Análise e Desenvolvimento de Sistemas",
-      email: "joao@email.com",
-      dtMatricula: "2026-02-01",
-      status: "Ativo",
-    },
-    {
-      id: 2,
-      nome: "Maria Eduarda",
-      cpf: "321.654.987-00",
-      curso: "Administração",
-      email: "maria@email.com",
-      dtMatricula: "2026-01-23",
-      status: "Ativo",
-    },
-  ]);
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
 
   const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
 
@@ -103,21 +100,71 @@ export default function Alunos(): JSX.Element {
 
   const [novoAluno, setNovoAluno] = useState(NOVO_ALUNO_INICIAL);
 
-  function handleAddAluno() {
-    const novo: Aluno = {
-      id: Date.now(),
-      nome: novoAluno.nome,
-      cpf: novoAluno.cpf,
-      curso: novoAluno.curso,
-      email: novoAluno.email,
-      dtMatricula: novoAluno.dtMatricula,
-      status: "Ativo",
-    };
+  useEffect(() => {
+    async function carregarAlunos() {
+      try {
+        const students = await getStudents();
 
-    setAlunos((prev) => [...prev, novo]);
-    setNovoAluno(NOVO_ALUNO_INICIAL);
-    setOpenAdd(false);
+        const alunosFormatados: Aluno[] = students.map(
+          (student: Student) => ({
+            id: student.id,
+            nome: student.name,
+            cpf: student.cpf,
+            curso: "Não atribuído",
+            email: student.email,
+            dtMatricula: student.admissionDate,
+            status: student.isActive ? "Ativo" : "Inativo",
+          }),
+        );
+
+        setAlunos(alunosFormatados);
+      } catch (error) {
+        console.error("Erro ao carregar alunos:", error);
+      }
+    }
+
+    carregarAlunos();
+  }, []);
+
+
+  async function handleAddAluno() {
+    try {
+      await createStudent({
+        name: novoAluno.nome,
+        cpf: novoAluno.cpf.replace(/\D/g, ""),
+        email: novoAluno.email,
+        phone: novoAluno.telefone,
+        secondaryPhone: novoAluno.telefoneSecundario || undefined,
+        address: novoAluno.endereco,
+        admissionDate: novoAluno.dtMatricula,
+        birthDate: novoAluno.dtNascimento,
+        gender: novoAluno.genero || undefined,
+        nationality: novoAluno.nacionalidade || undefined,
+        naturalness: novoAluno.naturalidade || undefined,
+        photoUrl: novoAluno.fotoUrl || undefined,
+        emergencyContact: novoAluno.contatoEmergencia,
+      });
+
+      const students = await getStudents();
+
+      const alunosFormatados: Aluno[] = students.map((student) => ({
+        id: student.id,
+        nome: student.name,
+        cpf: student.cpf,
+        curso: "Não atribuído",
+        email: student.email,
+        dtMatricula: student.admissionDate,
+        status: student.isActive ? "Ativo" : "Inativo",
+      }));
+
+      setAlunos(alunosFormatados);
+      setNovoAluno(NOVO_ALUNO_INICIAL);
+      setOpenAdd(false);
+    } catch (error) {
+      console.error("Erro ao cadastrar aluno:", error);
+    }
   }
+
 
   function handleEditAluno() {
     if (!selectedAluno) return;
@@ -127,11 +174,33 @@ export default function Alunos(): JSX.Element {
     setOpenEdit(false);
   }
 
-  function handleDeleteAluno() {
+
+  async function handleDeleteAluno() {
     if (!selectedAluno) return;
-    setAlunos((prev) => prev.filter((a) => a.id !== selectedAluno.id));
-    setOpenDelete(false);
+
+    try {
+      await deleteStudent(selectedAluno.id);
+
+      const students = await getStudents();
+
+      const alunosFormatados: Aluno[] = students.map((student) => ({
+        id: student.id,
+        nome: student.name,
+        cpf: student.cpf,
+        curso: "Não atribuído",
+        email: student.email,
+        dtMatricula: student.admissionDate,
+        status: student.isActive ? "Ativo" : "Inativo",
+      }));
+
+      setAlunos(alunosFormatados);
+      setSelectedAluno(null);
+      setOpenDelete(false);
+    } catch (error) {
+      console.error("Erro ao excluir aluno:", error);
+    }
   }
+
 
   function formatarData(iso: string) {
     if (!iso) return "—";
@@ -285,6 +354,15 @@ export default function Alunos(): JSX.Element {
                 curso: selectedAluno.curso,
                 email: selectedAluno.email,
                 dtMatricula: selectedAluno.dtMatricula,
+                telefone: "",
+                telefoneSecundario: "",
+                endereco: "",
+                dtNascimento: "",
+                genero: "",
+                nacionalidade: "",
+                naturalidade: "",
+                fotoUrl: "",
+                contatoEmergencia: "",
               }}
               onChange={(field, value) =>
                 setSelectedAluno((prev) =>
@@ -336,7 +414,17 @@ type AlunoFormValues = {
   curso: string;
   email: string;
   dtMatricula: string;
+  telefone: string;
+  telefoneSecundario: string;
+  endereco: string;
+  dtNascimento: string;
+  genero: string;
+  nacionalidade: string;
+  naturalidade: string;
+  fotoUrl: string;
+  contatoEmergencia: string;
 };
+
 
 function AlunoFormFields({
   values,
@@ -346,13 +434,12 @@ function AlunoFormFields({
   onChange: (field: keyof AlunoFormValues, value: string) => void;
 }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-2">
       <Field>
         <FieldLabel htmlFor="studentName">Nome do Aluno</FieldLabel>
         <Input
           id="studentName"
-          autoComplete="off"
-          placeholder="John Doe"
+          placeholder="Nome completo"
           value={values.nome}
           onChange={(e) => onChange("nome", e.target.value)}
         />
@@ -362,11 +449,111 @@ function AlunoFormFields({
         <FieldLabel htmlFor="cpf">CPF do Aluno</FieldLabel>
         <Input
           id="cpf"
-          autoComplete="off"
           placeholder="123.456.789-00"
           value={values.cpf}
-          maxLength={11}
+          maxLength={14}
           onChange={(e) => onChange("cpf", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="email">E-mail</FieldLabel>
+        <Input
+          id="email"
+          type="email"
+          placeholder="aluno@email.com"
+          value={values.email}
+          onChange={(e) => onChange("email", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="phone">Telefone</FieldLabel>
+        <Input
+          id="phone"
+          placeholder="(11) 99999-9999"
+          value={values.telefone}
+          onChange={(e) => onChange("telefone", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="secondaryPhone">Telefone Secundário</FieldLabel>
+        <Input
+          id="secondaryPhone"
+          placeholder="(11) 99999-9999"
+          value={values.telefoneSecundario}
+          onChange={(e) => onChange("telefoneSecundario", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="address">Endereço</FieldLabel>
+        <Input
+          id="address"
+          placeholder="Rua, número, bairro e cidade"
+          value={values.endereco}
+          onChange={(e) => onChange("endereco", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="dtBirth">Data de Nascimento</FieldLabel>
+        <Input
+          id="dtBirth"
+          type="date"
+          value={values.dtNascimento}
+          onChange={(e) => onChange("dtNascimento", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="gender">Gênero</FieldLabel>
+        <Input
+          id="gender"
+          placeholder="Gênero"
+          value={values.genero}
+          onChange={(e) => onChange("genero", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="nationality">Nacionalidade</FieldLabel>
+        <Input
+          id="nationality"
+          placeholder="Brasileira"
+          value={values.nacionalidade}
+          onChange={(e) => onChange("nacionalidade", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="naturalness">Naturalidade</FieldLabel>
+        <Input
+          id="naturalness"
+          placeholder="Cidade de nascimento"
+          value={values.naturalidade}
+          onChange={(e) => onChange("naturalidade", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="photoUrl">URL da Foto</FieldLabel>
+        <Input
+          id="photoUrl"
+          placeholder="https://..."
+          value={values.fotoUrl}
+          onChange={(e) => onChange("fotoUrl", e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="emergencyContact">Contato de Emergência</FieldLabel>
+        <Input
+          id="emergencyContact"
+          placeholder="Nome e telefone para contato"
+          value={values.contatoEmergencia}
+          onChange={(e) => onChange("contatoEmergencia", e.target.value)}
         />
       </Field>
 
@@ -392,18 +579,6 @@ function AlunoFormFields({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="email">E-mail</FieldLabel>
-        <Input
-          id="email"
-          autoComplete="off"
-          placeholder="aluno@email.com"
-          type="email"
-          value={values.email}
-          onChange={(e) => onChange("email", e.target.value)}
-        />
-      </Field>
-
-      <Field>
         <FieldLabel htmlFor="dtEnrollment">Data de Matrícula</FieldLabel>
         <Input
           id="dtEnrollment"
@@ -415,3 +590,4 @@ function AlunoFormFields({
     </div>
   );
 }
+

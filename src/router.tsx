@@ -6,7 +6,7 @@ import Alunos from "./pages/Students";
 import Fornecedores from "./pages/Fornecedores";
 import Docentes from "./pages/Docentes";
 import Cursos from "./pages/Cursos";
-import Turmas from "./pages/Turmas";
+import Turmas from "./pages/Classes";
 import Usuarios from "./pages/Usuarios";
 import Configuracoes from "./pages/Configuracoes";
  

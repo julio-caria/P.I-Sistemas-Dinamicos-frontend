@@ -1,4 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getClasses,
+  createClass,
+  updateClass,
+  deleteClass,
+  type Class,
+} from "@/services/classService";
+import {
+  getCourses,
+  type Course,
+} from "@/services/courseService";
 import {
   Pencil,
   Plus,
@@ -41,97 +52,95 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-type Turma = {
-  id: number;
-  nome: string;
-  curso: string;
-  vagas: number;
-  semestre: number;
-  horario: string;
-  status: "Ativo" | "Inativo";
-};
-
 const NOVA_TURMA_INICIAL = {
-  nome: "",
-  curso: "",
-  vagas: 0,
-  semestre: 0,
-  horario: "",
+  courseId: "",
+  description: "",
+  semester: "1" as "1" | "2",
+  year: new Date().getFullYear(),
+  scheduleTime: "",
+  room: "",
 };
 
-type Curso = {
-  id: number;
-  nome: string;
-};
-
-const cursos: Curso[] = [
-  { id: 1, nome: "Tecnologia em Sistemas para a Internet" },
-  { id: 2, nome: "Ciência da Computação" },
-  { id: 3, nome: "Análise e Desenvolvimento de Sistemas" },
-  { id: 4, nome: "Design Gráfico" },
-  { id: 5, nome: "Desenvolvimento Web" },
-  { id: 6, nome: "Sistemas da Informação" },
-  { id: 7, nome: "Administração" },
-];
-
-export default function Turmas(): JSX.Element {
-  const [turmas, setTurmas] = useState<Turma[]>([
-    {
-      id: 1,
-      nome: "ADS 2026 - A",
-      curso: "ADS",
-      vagas: 30,
-      semestre: 5,
-      horario: "20h30",
-      status: "Ativo",
-    },
-    {
-      id: 2,
-      nome: "ADM 2026 - B",
-      curso: "Administração",
-      vagas: 30,
-      semestre: 5,
-      horario: "19h00",
-      status: "Ativo",
-    },
-  ]);
-
-  const [selectedTurma, setSelectedTurma] = useState<Turma | null>(null);
+export default function Classes(): JSX.Element {
+  const [turmas, setTurmas] = useState<Class[]>([]);
+  const [selectedTurma, setSelectedTurma] = useState<Class | null>(null);
 
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
-
+  const [courses, setCourses] = useState<Course[]>([]);
   const [novaTurma, setNovaTurma] = useState(NOVA_TURMA_INICIAL);
+  const [editTurma, setEditTurma] = useState<TurmaFormValues>(
+    NOVA_TURMA_INICIAL,
+  );
 
-  function handleAddTurma() {
-    const nova: Turma = {
-      id: Date.now(),
-      nome: novaTurma.nome,
-      curso: novaTurma.curso,
-      vagas: novaTurma.vagas,
-      semestre: novaTurma.semestre,
-      horario: novaTurma.horario,
-      status: "Ativo",
-    };
+  useEffect(() => {
+    async function loadClasses() {
+      try {
+        const [classesData, coursesData] = await Promise.all([
+          getClasses(),
+          getCourses(),
+        ]);
 
-    setTurmas((prev) => [...prev, nova]);
-    setNovaTurma(NOVA_TURMA_INICIAL);
-    setOpenAdd(false);
+        setTurmas(classesData);
+        setCourses(coursesData);
+      } catch (error) {
+        console.error("Erro ao carregar turmas:", error);
+      }
+    }
+
+    loadClasses();
+  }, []);
+
+  async function handleAddTurma() {
+    try {
+      await createClass(novaTurma);
+
+      const classesData = await getClasses();
+      setTurmas(classesData);
+
+      setNovaTurma(NOVA_TURMA_INICIAL);
+      setOpenAdd(false);
+    } catch (error) {
+      console.error("Erro ao cadastrar turma:", error);
+    }
   }
 
-  function handleEditTurma() {
+  async function handleEditTurma() {
     if (!selectedTurma) return;
-    setTurmas((prev) =>
-      prev.map((t) => (t.id === selectedTurma.id ? selectedTurma : t)),
-    );
-    setOpenEdit(false);
+
+    try {
+      await updateClass(selectedTurma.id, {
+        ...editTurma,
+        teacherId: selectedTurma.teacherId,
+        status: selectedTurma.status,
+        isActive: selectedTurma.isActive,
+      });
+
+      const classesData = await getClasses();
+      setTurmas(classesData);
+
+      setOpenEdit(false);
+      setSelectedTurma(null);
+    } catch (error) {
+      console.error("Erro ao atualizar turma:", error);
+    }
   }
 
-  function handleDeleteTurma() {
+  async function handleDeleteTurma() {
     if (!selectedTurma) return;
-    setTurmas((prev) => prev.filter((t) => t.id !== selectedTurma.id));
-    setOpenDelete(false);
+
+    try {
+      await deleteClass(selectedTurma.id);
+
+      const classesData = await getClasses();
+      setTurmas(classesData);
+
+      setOpenDelete(false);
+      setSelectedTurma(null);
+    } catch (error) {
+      console.error("Erro ao excluir turma:", error);
+    }
   }
 
   return (
@@ -159,7 +168,6 @@ export default function Turmas(): JSX.Element {
             <TableRow>
               <TableHead className="text-zinc-800 font-bold dark:text-white">Nome</TableHead>
               <TableHead className="text-zinc-800 font-bold dark:text-white">Curso</TableHead>
-              <TableHead className="text-zinc-800 font-bold dark:text-white">Vagas</TableHead>
               <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Semestre
               </TableHead>
@@ -171,12 +179,21 @@ export default function Turmas(): JSX.Element {
           <TableBody>
             {turmas.map((turma) => (
               <TableRow key={turma.id} className="dark:border-zinc-700 dark:hover:bg-[#303030]">
-                <TableCell className="text-zinc-800 dark:text-white">{turma.nome}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white" >{turma.curso}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{turma.vagas}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{turma.semestre}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{turma.horario}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{turma.status}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">{turma.description}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white" >{courses.find((course) => course.id === turma.courseId)?.name ?? "Curso não encontrado"}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {turma.semester}º semestre / {turma.year}
+                </TableCell>                <TableCell className="text-zinc-800 dark:text-white">{turma.scheduleTime.slice(0, 5)}</TableCell>
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {!turma.isActive
+                    ? "Inativa"
+                    : {
+                      planned: "Planejada",
+                      in_progress: "Em andamento",
+                      completed: "Concluída",
+                      cancelled: "Cancelada",
+                    }[turma.status]}
+                </TableCell>
                 <TableCell className="text-zinc-800 dark:text-white">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -189,6 +206,16 @@ export default function Turmas(): JSX.Element {
                       <DropdownMenuItem
                         onClick={() => {
                           setSelectedTurma(turma);
+
+                          setEditTurma({
+                            courseId: turma.courseId,
+                            description: turma.description,
+                            semester: turma.semester,
+                            year: turma.year,
+                            scheduleTime: turma.scheduleTime.slice(0, 5),
+                            room: turma.room,
+                          });
+
                           setOpenEdit(true);
                         }}
                       >
@@ -219,13 +246,14 @@ export default function Turmas(): JSX.Element {
       <Dialog open={openAdd} onOpenChange={setOpenAdd}>
         <DialogContent className="dark:bg-[#242424] dark:border-[#363636] dark:text-white">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Cadastrar Docente</DialogTitle>
+            <DialogTitle className="dark:text-white">Cadastrar Turma</DialogTitle>
             <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400">
-              Preencha os campos para cadastrar um docente.
+              Preencha os campos para cadastrar uma turma.
             </DialogDescription>
           </DialogHeader>
 
           <TurmaFormFields
+            courses={courses}
             values={novaTurma}
             onChange={(field, value) =>
               setNovaTurma((prev) => ({ ...prev, [field]: value }))
@@ -245,7 +273,7 @@ export default function Turmas(): JSX.Element {
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogContent className="dark:bg-[#242424] dark:border-[#363636] dark:text-white">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Editar Registro</DialogTitle>
+            <DialogTitle className="dark:text-white">Editar Turma</DialogTitle>
             <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400">
               Altere os campos desejados e salve.
             </DialogDescription>
@@ -253,17 +281,13 @@ export default function Turmas(): JSX.Element {
 
           {selectedTurma && (
             <TurmaFormFields
-              values={{
-                nome: selectedTurma.nome,
-                curso: selectedTurma.curso,
-                vagas: selectedTurma.vagas,
-                semestre: selectedTurma.semestre,
-                horario: selectedTurma.horario,
-              }}
+              courses={courses}
+              values={editTurma}
               onChange={(field, value) =>
-                setSelectedTurma((prev) =>
-                  prev ? { ...prev, [field]: value } : prev,
-                )
+                setEditTurma((prev) => ({
+                  ...prev,
+                  [field]: value,
+                }))
               }
             />
           )}
@@ -297,86 +321,124 @@ export default function Turmas(): JSX.Element {
 }
 
 type TurmaFormValues = {
-  nome: string;
-  curso: string;
-  vagas: number;
-  semestre: number;
-  horario: string;
+  courseId: string;
+  description: string;
+  semester: "1" | "2";
+  year: number;
+  scheduleTime: string;
+  room: string;
 };
 
 function TurmaFormFields({
   values,
+  courses,
   onChange,
 }: {
   values: TurmaFormValues;
-  onChange: (field: keyof TurmaFormValues, value: string) => void;
+  courses: Course[];
+  onChange: (
+    field: keyof TurmaFormValues,
+    value: string | number,
+  ) => void;
 }) {
   return (
     <div className="space-y-4">
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="course">Curso</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="course">
+          Curso
+        </FieldLabel>
         <Select
-          value={values.curso}
-          onValueChange={(value) => onChange("curso", value)}
-          required
+          value={values.courseId}
+          onValueChange={(value) => onChange("courseId", value)}
         >
           <SelectTrigger id="course">
             <SelectValue placeholder="Selecione um curso" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {cursos.map((curso) => (
-                <SelectItem key={curso.id} value={curso.nome}>
-                  {curso.nome}
+              {courses.map((course) => (
+                <SelectItem key={course.id} value={course.id}>
+                  {course.name}
                 </SelectItem>
               ))}
             </SelectGroup>
           </SelectContent>
         </Select>
       </Field>
+
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="description">Descrição</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="description">
+          Descrição
+        </FieldLabel>
         <Input
           id="description"
           autoComplete="off"
-          placeholder="TSI - Período Noturno - 3 Semestre"
+          placeholder="TSI - Período Noturno"
           required
-          value={values.nome}
-          onChange={(e) => onChange("nome", e.target.value)}
+          value={values.description}
+          onChange={(e) => onChange("description", e.target.value)}
         />
       </Field>
+
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="vagas">Vagas</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="semester">
+          Semestre
+        </FieldLabel>
+        <Select
+          value={values.semester}
+          onValueChange={(value) =>
+            onChange("semester", value as "1" | "2")
+          }
+        >
+          <SelectTrigger id="semester">
+            <SelectValue placeholder="Selecione o semestre" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">1º semestre</SelectItem>
+            <SelectItem value="2">2º semestre</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+
+      <Field>
+        <FieldLabel className="dark:text-white" htmlFor="year">
+          Ano letivo
+        </FieldLabel>
         <Input
-          id="vagas"
-          autoComplete="off"
-          placeholder="30"
-          value={values.vagas}
+          id="year"
+          type="number"
           required
-          maxLength={11}
-          onChange={(e) => onChange("vagas", e.target.value)}
+          min={2000}
+          max={2100}
+          value={values.year}
+          onChange={(e) => onChange("year", Number(e.target.value))}
         />
       </Field>
+
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="semestre">Semestre</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="scheduleTime">
+          Horário
+        </FieldLabel>
         <Input
-          id="semestre"
-          autoComplete="off"
+          id="scheduleTime"
+          type="time"
           required
-          placeholder="6"
-          value={values.semestre}
-          onChange={(e) => onChange("semestre", e.target.value)}
+          value={values.scheduleTime}
+          onChange={(e) => onChange("scheduleTime", e.target.value)}
         />
       </Field>
+
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="horario">Horário</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="room">
+          Sala
+        </FieldLabel>
         <Input
-          id="horario"
+          id="room"
           autoComplete="off"
-          placeholder="19h30"
-          value={values.horario}
+          placeholder="Sala 101"
           required
-          onChange={(e) => onChange("horario", e.target.value)}
+          value={values.room}
+          onChange={(e) => onChange("room", e.target.value)}
         />
       </Field>
     </div>

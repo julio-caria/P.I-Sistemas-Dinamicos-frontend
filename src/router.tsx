@@ -3,7 +3,7 @@ import AppLayout from "@/components/layouts/AppLayout";
 import Home from "@/pages/Home";
 import Login from "./pages/Login";
 import Alunos from "./pages/Students";
-import Fornecedores from "./pages/Fornecedores";
+import Fornecedores from "./pages/Suppliers";
 import Docentes from "./pages/Teachers";
 import Cursos from "./pages/Cursos";
 import Turmas from "./pages/Classes";

@@ -1,10 +1,16 @@
-import { useState } from "react";
-import {
+import { useEffect, useState } from "react"; import {
   Pencil,
   Plus,
   MoreHorizontalIcon,
   Trash,
 } from "lucide-react";
+import {
+  getSuppliers,
+  createSupplier,
+  deleteSupplier,
+  type Supplier,
+  type CreateSupplierData,
+} from "@/services/supplierService";
 import type { JSX } from "react";
 import {
   Dialog,
@@ -41,24 +47,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 
-type Fornecedor = {
-  id: number;
-  razaoSocial: string;
-  cnpj: string;
-  inscricaoEstadual: string;
-  endereco: string;
-  categoria: string;
-  telefone: string;
-  status: "Ativo" | "Inativo";
-};
 
 const NOVO_FORNECEDOR_INICIAL = {
-  razaoSocial: "",
+  legalName: "",
   cnpj: "",
-  inscricaoEstadual: "",
-  endereco: "",
-  categoria: "",
-  telefone: "",
+  stateRegistration: "",
+  email: "",
+  address: "",
+  category: "",
+  phone: "",
 };
 
 type Categoria = {
@@ -72,31 +69,23 @@ const categorias: Categoria[] = [
 ];
 
 export default function Fornecedores(): JSX.Element {
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([
-    {
-      id: 1,
-      razaoSocial: "Tech Solutions",
-      cnpj: "01.000.000/0001-30",
-      inscricaoEstadual: "",
-      endereco: "Av. Nações Unidas, Santo Amaro - SP",
-      categoria: "Serviço",
-      telefone: "(11) 99999-9999",
-      status: "Ativo",
-    },
-    {
-      id: 2,
-      razaoSocial: "Office Paper",
-      cnpj: "01.000.000/0001-31",
-      inscricaoEstadual: "",
-      endereco: "Av. Nações Unidas, Santo Amaro - SP",
-      categoria: "Serviço",
-      telefone: "(11) 98888-8888",
-      status: "Ativo",
-    },
-  ]);
+  const [fornecedores, setFornecedores] = useState<Supplier[]>([]);
+
+  useEffect(() => {
+    async function loadSuppliers() {
+      try {
+        const data = await getSuppliers();
+        setFornecedores(data);
+      } catch (error) {
+        console.error("Erro ao carregar fornecedores:", error);
+      }
+    }
+
+    loadSuppliers();
+  }, []);
 
   const [selectedFornecedor, setSelectedFornecedor] =
-    useState<Fornecedor | null>(null);
+    useState<Supplier | null>(null);
 
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -104,21 +93,29 @@ export default function Fornecedores(): JSX.Element {
 
   const [novoFornecedor, setNovoFornecedor] = useState(NOVO_FORNECEDOR_INICIAL);
 
-  function handleAddFornecedor() {
-    const novo: Fornecedor = {
-      id: Date.now(),
-      razaoSocial: novoFornecedor.razaoSocial,
-      cnpj: novoFornecedor.cnpj,
-      inscricaoEstadual: novoFornecedor.inscricaoEstadual,
-      endereco: novoFornecedor.endereco,
-      categoria: novoFornecedor.categoria,
-      telefone: novoFornecedor.telefone,
-      status: "Ativo",
-    };
+  async function handleAddFornecedor() {
+    try {
+      const dadosFornecedor: CreateSupplierData = {
+        legalName: novoFornecedor.legalName,
+        cnpj: novoFornecedor.cnpj.replace(/\D/g, ""),
+        stateRegistration: novoFornecedor.stateRegistration || null,
+        email: novoFornecedor.email,
+        address: novoFornecedor.address,
+        category: novoFornecedor.category,
+        phone: novoFornecedor.phone,
+      };
 
-    setFornecedores((prev) => [...prev, novo]);
-    setNovoFornecedor(NOVO_FORNECEDOR_INICIAL);
-    setOpenAdd(false);
+      await createSupplier(dadosFornecedor);
+
+      const fornecedoresAtualizados = await getSuppliers();
+      setFornecedores(fornecedoresAtualizados);
+
+      setNovoFornecedor(NOVO_FORNECEDOR_INICIAL);
+      setOpenAdd(false);
+    } catch (error) {
+      console.error("Erro ao cadastrar fornecedor:", error);
+      alert("Não foi possível cadastrar o fornecedor. Verifique os dados.");
+    }
   }
 
   function handleEditSupplier() {
@@ -131,12 +128,21 @@ export default function Fornecedores(): JSX.Element {
     setOpenEdit(false);
   }
 
-  function handleDeleteFornecedor() {
+  async function handleDeleteFornecedor() {
     if (!selectedFornecedor) return;
-    setFornecedores((prev) =>
-      prev.filter((f) => f.id !== selectedFornecedor.id),
-    );
-    setOpenDelete(false);
+
+    try {
+      await deleteSupplier(selectedFornecedor.id);
+
+      const fornecedoresAtualizados = await getSuppliers();
+      setFornecedores(fornecedoresAtualizados);
+
+      setSelectedFornecedor(null);
+      setOpenDelete(false);
+    } catch (error) {
+      console.error("Erro ao excluir fornecedor:", error);
+      alert("Não foi possível excluir o fornecedor.");
+    }
   }
 
   return (
@@ -152,7 +158,7 @@ export default function Fornecedores(): JSX.Element {
             className="bg-blue-900 cursor-pointer hover:brightness-115
                        dark:bg-[#242424] dark:hover:bg-[#303030]
                        dark:text-[#D9A900] dark:border dark:border-[#363636]"
-                              >
+          >
             <Plus size={18} />
             <span>Cadastrar Fornecedor</span>
           </Button>
@@ -182,24 +188,54 @@ export default function Fornecedores(): JSX.Element {
               <TableHead className="text-zinc-800 font-bold dark:text-white">Ações</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {fornecedores.map((fornecedor) => (
-              <TableRow key={fornecedor.id} className="dark:border-zinc-700 dark:hover:bg-[#303030]">
-                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.razaoSocial}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.cnpj}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.inscricaoEstadual}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.endereco}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.categoria}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.telefone}</TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">{fornecedor.status}</TableCell>
+              <TableRow
+                key={fornecedor.id}
+                className="dark:border-zinc-700 dark:hover:bg-[#303030]"
+              >
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {fornecedor.legalName}
+                </TableCell>
+
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {fornecedor.cnpj}
+                </TableCell>
+
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {fornecedor.stateRegistration || "Não informado"}
+                </TableCell>
+
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {fornecedor.address}
+                </TableCell>
+
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {fornecedor.category}
+                </TableCell>
+
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {fornecedor.phone}
+                </TableCell>
+
+                <TableCell className="text-zinc-800 dark:text-white">
+                  {fornecedor.isActive ? "Ativo" : "Inativo"}
+                </TableCell>
+
                 <TableCell className="text-zinc-800 dark:text-white">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8 dark:text-white dark:hover:bg-[#383838]">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 dark:text-white dark:hover:bg-[#383838]"
+                      >
                         <MoreHorizontalIcon />
                         <span className="sr-only">Abrir menu</span>
                       </Button>
                     </DropdownMenuTrigger>
+
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
                         onClick={() => {
@@ -210,7 +246,9 @@ export default function Fornecedores(): JSX.Element {
                         <Pencil size={12} />
                         Editar
                       </DropdownMenuItem>
+
                       <DropdownMenuSeparator />
+
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => {
@@ -227,6 +265,7 @@ export default function Fornecedores(): JSX.Element {
               </TableRow>
             ))}
           </TableBody>
+
         </Table>
       </main>
 
@@ -309,17 +348,18 @@ export default function Fornecedores(): JSX.Element {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }
 
 type SupplierFormValues = {
-  razaoSocial: string;
+  legalName: string;
   cnpj: string;
-  inscricaoEstadual: string;
-  endereco: string;
-  categoria: string;
-  telefone: string;
+  stateRegistration: string;
+  email: string;
+  address: string;
+  category: string;
+  phone: string;
 };
 
 function UsuarioFormFields({
@@ -332,69 +372,80 @@ function UsuarioFormFields({
   return (
     <div className="space-y-4">
       <Field>
-        <FieldLabel htmlFor="razaoSocial">Razão Social</FieldLabel>
+        <FieldLabel htmlFor="legalName">Razão Social</FieldLabel>
         <Input
-          id="razaoSocial"
-          autoComplete="off"
-          placeholder="Senac"
+          id="legalName"
+          placeholder="Nome da empresa"
           required
-          value={values.razaoSocial}
-          onChange={(e) => onChange("razaoSocial", e.target.value)}
+          value={values.legalName}
+          onChange={(e) => onChange("legalName", e.target.value)}
         />
       </Field>
+
       <Field>
         <FieldLabel htmlFor="cnpj">CNPJ</FieldLabel>
         <Input
           id="cnpj"
-          autoComplete="off"
           placeholder="00.000.000/0000-00"
-          value={values.cnpj}
           required
+          value={values.cnpj}
           onChange={(e) => onChange("cnpj", e.target.value)}
         />
       </Field>
+
       <Field>
-        <FieldLabel htmlFor="ie">Inscrição Estadual</FieldLabel>
+        <FieldLabel htmlFor="stateRegistration">
+          Inscrição Estadual
+        </FieldLabel>
         <Input
-          id="ie"
-          autoComplete="off"
-          placeholder="00000"
-          maxLength={5}
-          value={values.inscricaoEstadual}
-          required
-          onChange={(e) => onChange("inscricaoEstadual", e.target.value)}
+          id="stateRegistration"
+          placeholder="Inscrição Estadual"
+          value={values.stateRegistration}
+          onChange={(e) => onChange("stateRegistration", e.target.value)}
         />
       </Field>
+
+      <Field>
+        <FieldLabel htmlFor="email">E-mail</FieldLabel>
+        <Input
+          id="email"
+          type="email"
+          placeholder="empresa@email.com"
+          required
+          value={values.email}
+          onChange={(e) => onChange("email", e.target.value)}
+        />
+      </Field>
+
       <Field>
         <FieldLabel htmlFor="address">Endereço</FieldLabel>
         <Input
           id="address"
-          autoComplete="off"
-          placeholder="Av. Nações Unidas - Santo Amaro - SP"
-          value={values.endereco}
+          placeholder="Endereço completo"
           required
-          onChange={(e) => onChange("endereco", e.target.value)}
+          value={values.address}
+          onChange={(e) => onChange("address", e.target.value)}
         />
       </Field>
+
       <Field>
         <FieldLabel htmlFor="phone">Telefone</FieldLabel>
         <Input
           id="phone"
-          autoComplete="off"
           placeholder="(11) 1234-5678"
-          value={values.telefone}
           required
-          onChange={(e) => onChange("telefone", e.target.value)}
+          value={values.phone}
+          onChange={(e) => onChange("phone", e.target.value)}
         />
       </Field>
+
       <Field>
-        <FieldLabel htmlFor="categorias">Categoria</FieldLabel>
+        <FieldLabel htmlFor="category">Categoria</FieldLabel>
         <Select
-          value={values.categoria}
-          onValueChange={(value) => onChange("categoria", value)}
-          required
+          value={values.category}
+          onValueChange={(value) => onChange("category", value)}
         >
-          <SelectTrigger id="categorias">
+          <SelectTrigger id="category">
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
           <SelectContent>

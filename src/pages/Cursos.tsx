@@ -50,7 +50,6 @@ type Curso = {
   modalidade: string;
   cargaHoraria: number;
   semestres: number;
-  docente: string;
   status: "Ativo" | "Inativo";
 };
 
@@ -63,17 +62,6 @@ const modalidades: Modalidade[] = [
   { id: 1, description: "EAD" },
   { id: 2, description: "Presencial" },
   { id: 3, description: "Híbrido" },
-];
-
-type Docente = {
-  id: number;
-  nome: string;
-};
-
-const docentes: Docente[] = [
-  { id: 1, nome: "Ana Paula Silva" },
-  { id: 2, nome: "Marcos Paulo César" },
-  { id: 3, nome: "Maria Paula da Silva" },
 ];
 
 // Converte a modalidade exibida na tela para o valor esperado pela API
@@ -98,7 +86,6 @@ function formatCurso(curso: Course): Curso {
           : "Híbrido",
     cargaHoraria: curso.workloadHours,
     semestres: curso.durationSemesters,
-    docente: "Não atribuído",
     status: curso.isActive ? "Ativo" : "Inativo",
   };
 }
@@ -128,7 +115,6 @@ export default function Cursos(): JSX.Element {
     modalidade: "",
     semestres: "1",
     cargaHoraria: "1",
-    docente: "",
   });
 
   useEffect(() => {
@@ -184,7 +170,6 @@ export default function Cursos(): JSX.Element {
         modalidade: "",
         semestres: "1",
         cargaHoraria: "1",
-        docente: "",
       });
 
       setOpenAdd(false);
@@ -306,9 +291,6 @@ export default function Cursos(): JSX.Element {
                 Nome
               </TableHead>
               <TableHead className="text-zinc-800 dark:text-white font-bold">
-                Docente
-              </TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">
                 Modalidade
               </TableHead>
               <TableHead className="text-zinc-800 dark:text-white font-bold">
@@ -334,9 +316,6 @@ export default function Cursos(): JSX.Element {
               >
                 <TableCell className="text-zinc-800 dark:text-white">
                   {curso.nome}
-                </TableCell>
-                <TableCell className="text-zinc-800 dark:text-white">
-                  {curso.docente}
                 </TableCell>
                 <TableCell className="text-zinc-800 dark:text-white">
                   {curso.modalidade}
@@ -449,28 +428,6 @@ export default function Cursos(): JSX.Element {
               </Select>
             </Field>
             <Field>
-              <FieldLabel htmlFor="teacher">Docente</FieldLabel>
-              <Select
-                value={novoCurso.docente}
-                onValueChange={(value) =>
-                  setNovoCurso({ ...novoCurso, docente: value })
-                }
-              >
-                <SelectTrigger id="teacher">
-                  <SelectValue placeholder="Maria Paula da Silva" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {docentes.map((docente) => (
-                      <SelectItem key={docente.id} value={String(docente.nome)}>
-                        {docente.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
               <FieldLabel htmlFor="semesters">Semestres</FieldLabel>
               <Input
                 id="semesters"
@@ -569,31 +526,6 @@ export default function Cursos(): JSX.Element {
                           value={modalidade.description}
                         >
                           {modalidade.description}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="editTeacher">Docente</FieldLabel>
-                <Select
-                  value={selectedCurso.docente}
-                  onValueChange={(value) =>
-                    setSelectedCurso({ ...selectedCurso, docente: value })
-                  }
-                >
-                  <SelectTrigger id="editTeacher">
-                    <SelectValue placeholder="Maria Paula da Silva" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {docentes.map((docente) => (
-                        <SelectItem
-                          key={docente.id}
-                          value={String(docente.nome)}
-                        >
-                          {docente.nome}
                         </SelectItem>
                       ))}
                     </SelectGroup>

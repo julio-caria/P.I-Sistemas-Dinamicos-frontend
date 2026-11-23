@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   getCourses,
   createCourse,
+  updateCourse,
   deleteCourse,
 } from "@/services/courseService";
 import type { Course } from "@/services/courseService";
@@ -75,6 +76,33 @@ const docentes: Docente[] = [
   { id: 3, nome: "Maria Paula da Silva" },
 ];
 
+// Converte a modalidade exibida na tela para o valor esperado pela API
+function modalidadeToApi(
+  modalidade: string,
+): "in_person" | "online" | "hybrid" {
+  if (modalidade === "Presencial") return "in_person";
+  if (modalidade === "EAD") return "online";
+  return "hybrid";
+}
+
+// Converte o curso retornado pela API para o formato usado na tela
+function formatCurso(curso: Course): Curso {
+  return {
+    id: curso.id,
+    nome: curso.name,
+    modalidade:
+      curso.modality === "in_person"
+        ? "Presencial"
+        : curso.modality === "online"
+          ? "EAD"
+          : "Híbrido",
+    cargaHoraria: curso.workloadHours,
+    semestres: curso.durationSemesters,
+    docente: "Não atribuído",
+    status: curso.isActive ? "Ativo" : "Inativo",
+  };
+}
+
 export default function Cursos(): JSX.Element {
   const [cursos, setCursos] = useState<Curso[]>([]);
 
@@ -107,23 +135,7 @@ export default function Cursos(): JSX.Element {
     async function carregarCursos() {
       try {
         const data = await getCourses();
-
-        const cursosFormatados: Curso[] = data.map((curso: Course) => ({
-          id: curso.id,
-          nome: curso.name,
-          modalidade:
-            curso.modality === "in_person"
-              ? "Presencial"
-              : curso.modality === "online"
-                ? "EAD"
-                : "Híbrido",
-          cargaHoraria: curso.workloadHours,
-          semestres: curso.durationSemesters,
-          docente: "Não atribuído",
-          status: curso.isActive ? "Ativo" : "Inativo",
-        }));
-
-        setCursos(cursosFormatados);
+        setCursos(data.map(formatCurso));
       } catch (error) {
         console.error("Erro ao carregar cursos:", error);
       }
@@ -156,34 +168,16 @@ export default function Cursos(): JSX.Element {
         name: novoCurso.nome.trim(),
         workloadHours: cargaHoraria,
         durationSemesters: semestres,
-        modality:
-          novoCurso.modalidade === "Presencial"
-            ? "in_person"
-            : novoCurso.modalidade === "EAD"
-              ? "online"
-              : "hybrid",
+        modality: modalidadeToApi(novoCurso.modalidade),
       });
 
-      showToast.success("Curso cadastrado", "Novo curso registrado com sucesso");
+      showToast.success(
+        "Curso cadastrado",
+        "Novo curso registrado com sucesso",
+      );
 
       const data = await getCourses();
-
-      const cursosFormatados: Curso[] = data.map((curso: Course) => ({
-        id: curso.id,
-        nome: curso.name,
-        modalidade:
-          curso.modality === "in_person"
-            ? "Presencial"
-            : curso.modality === "online"
-              ? "EAD"
-              : "Híbrido",
-        cargaHoraria: curso.workloadHours,
-        semestres: curso.durationSemesters,
-        docente: "Não atribuído",
-        status: curso.isActive ? "Ativo" : "Inativo",
-      }));
-
-      setCursos(cursosFormatados);
+      setCursos(data.map(formatCurso));
 
       setNovoCurso({
         nome: "",
@@ -203,35 +197,61 @@ export default function Cursos(): JSX.Element {
     }
   }
 
+  async function handleUpdateCurso() {
+    if (!selectedCurso) return;
+
+    const semestres = Number(selectedCurso.semestres);
+    const cargaHoraria = Number(selectedCurso.cargaHoraria);
+
+    if (
+      !selectedCurso.nome.trim() ||
+      !selectedCurso.modalidade ||
+      !Number.isInteger(semestres) ||
+      !Number.isInteger(cargaHoraria) ||
+      semestres < 1 ||
+      cargaHoraria < 1
+    ) {
+      showToast.warning(
+        "Campos inválidos",
+        "Preencha todos os campos corretamente.",
+      );
+      return;
+    }
+
+    try {
+      await updateCourse(selectedCurso.id, {
+        name: selectedCurso.nome.trim(),
+        workloadHours: cargaHoraria,
+        durationSemesters: semestres,
+        modality: modalidadeToApi(selectedCurso.modalidade),
+      });
+
+      showToast.success("Curso atualizado", "Alterações salvas com sucesso");
+
+      const data = await getCourses();
+      setCursos(data.map(formatCurso));
+
+      setOpenEdit(false);
+      setSelectedCurso(null);
+    } catch (error) {
+      console.error("Erro ao atualizar curso:", error);
+      showToast.error(
+        "Erro ao atualizar curso",
+        "Não foi possível salvar as alterações.",
+      );
+    }
+  }
+
   async function handleDeleteCurso() {
     if (!selectedCurso) return;
 
     try {
       await deleteCourse(selectedCurso.id);
-      showToast.success(
-        "Curso desativado",
-        "Curso desativado com sucesso",
-      );
-
+      showToast.success("Curso desativado", "Curso desativado com sucesso");
 
       const data = await getCourses();
+      setCursos(data.map(formatCurso));
 
-      const cursosFormatados: Curso[] = data.map((curso: Course) => ({
-        id: curso.id,
-        nome: curso.name,
-        modalidade:
-          curso.modality === "in_person"
-            ? "Presencial"
-            : curso.modality === "online"
-              ? "EAD"
-              : "Híbrido",
-        cargaHoraria: curso.workloadHours,
-        semestres: curso.durationSemesters,
-        docente: "Não atribuído",
-        status: curso.isActive ? "Ativo" : "Inativo",
-      }));
-
-      setCursos(cursosFormatados);
       setOpenDelete(false);
       setSelectedCurso(null);
     } catch (error) {
@@ -277,8 +297,6 @@ export default function Cursos(): JSX.Element {
             <span>Cadastrar Curso</span>
           </Button>
         </div>
-
-        {/* TABELA */}
 
         {/* TABELA */}
         <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
@@ -517,9 +535,9 @@ export default function Cursos(): JSX.Element {
           {selectedCurso && (
             <div className="space-y-4">
               <Field>
-                <FieldLabel htmlFor="courseName">Nome do Curso</FieldLabel>
+                <FieldLabel htmlFor="editCourseName">Nome do Curso</FieldLabel>
                 <Input
-                  id="courseName"
+                  id="editCourseName"
                   autoComplete="off"
                   placeholder="Tecnologia em Sistemas para a Internet"
                   value={selectedCurso.nome}
@@ -533,14 +551,14 @@ export default function Cursos(): JSX.Element {
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="modality">Modalidade</FieldLabel>
+                <FieldLabel htmlFor="editModality">Modalidade</FieldLabel>
                 <Select
                   value={selectedCurso.modalidade}
                   onValueChange={(value) =>
                     setSelectedCurso({ ...selectedCurso, modalidade: value })
                   }
                 >
-                  <SelectTrigger id="modality">
+                  <SelectTrigger id="editModality">
                     <SelectValue placeholder="EAD" />
                   </SelectTrigger>
                   <SelectContent>
@@ -558,14 +576,14 @@ export default function Cursos(): JSX.Element {
                 </Select>
               </Field>
               <Field>
-                <FieldLabel htmlFor="teacher">Docente</FieldLabel>
+                <FieldLabel htmlFor="editTeacher">Docente</FieldLabel>
                 <Select
                   value={selectedCurso.docente}
                   onValueChange={(value) =>
                     setSelectedCurso({ ...selectedCurso, docente: value })
                   }
                 >
-                  <SelectTrigger id="teacher">
+                  <SelectTrigger id="editTeacher">
                     <SelectValue placeholder="Maria Paula da Silva" />
                   </SelectTrigger>
                   <SelectContent>
@@ -583,50 +601,53 @@ export default function Cursos(): JSX.Element {
                 </Select>
               </Field>
               <Field>
-                <FieldLabel htmlFor="semesters">Semestres</FieldLabel>
+                <FieldLabel htmlFor="editSemesters">Semestres</FieldLabel>
                 <Input
-                  id="semesters"
+                  id="editSemesters"
                   autoComplete="off"
                   placeholder="8"
                   value={selectedCurso.semestres}
                   onChange={(e) =>
                     setSelectedCurso({
                       ...selectedCurso,
-                      semestres: e.target.value,
+                      semestres: Number(e.target.value),
                     })
                   }
                   required
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="duration">Carga Horária</FieldLabel>
+                <FieldLabel htmlFor="editDuration">Carga Horária</FieldLabel>
                 <Input
-                  id="duration"
+                  id="editDuration"
                   autoComplete="off"
                   placeholder="3200"
                   value={selectedCurso.cargaHoraria}
                   onChange={(e) =>
                     setSelectedCurso({
                       ...selectedCurso,
-                      cargaHoraria: e.target.value,
+                      cargaHoraria: Number(e.target.value),
                     })
                   }
                   required
                 />
               </Field>
-              <Button
-                onClick={() => {
-                  setCursos((prev) =>
-                    prev.map((c) =>
-                      c.id === selectedCurso.id ? selectedCurso : c,
-                    ),
-                  );
 
-                  setOpenEdit(false);
-                }}
-              >
-                Atualizar
-              </Button>
+              <DialogFooter>
+                <Button
+                  onClick={() => setOpenEdit(false)}
+                  variant="secondary"
+                  className="cursor-pointer hover:brightness-115"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleUpdateCurso}
+                  className="cursor-pointer hover:brightness-115"
+                >
+                  Atualizar
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>

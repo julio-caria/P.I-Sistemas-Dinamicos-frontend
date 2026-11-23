@@ -1,4 +1,3 @@
-
 import { apiFetch } from "./api";
 
 export type Course = {
@@ -43,6 +42,27 @@ export async function createCourse(course: CreateCourseData) {
 
   if (!response.ok) {
     throw new Error("Erro ao cadastrar curso.");
+  }
+
+  return response.json();
+}
+
+type UpdateCourseData = Partial<{
+  name: string;
+  workloadHours: number;
+  durationSemesters: number;
+  modality: "in_person" | "online" | "hybrid";
+  isActive: boolean;
+}>;
+
+export async function updateCourse(id: string, course: UpdateCourseData) {
+  const response = await apiFetch(`/api/v1/courses/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(course),
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao atualizar curso.");
   }
 
   return response.json();

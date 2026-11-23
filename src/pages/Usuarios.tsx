@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react"; import {
+import { useEffect, useState } from "react";
+import {
   Pencil,
   Plus,
   MoreHorizontalIcon,
@@ -44,12 +45,16 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import {
   listarUsuarios,
   cadastrarUsuario,
+  atualizarUsuario,
   excluirUsuario,
 } from "@/services/userService";
+import type { Usuario as UsuarioApi, UserRole } from "@/services/userService";
 import { showToast } from "@/utils/toast";
 
 type Usuario = {
   id: string;
+  firstName: string;
+  lastName: string;
   nome: string;
   email: string;
   emailPessoal: string;
@@ -59,15 +64,21 @@ type Usuario = {
 
 type CargoUsuario = {
   id: number;
+  value: UserRole;
   nome: string;
 };
 
+// "value" é o valor aceito pela API (enum user_role); "nome" é o texto exibido na tela
 const roles: CargoUsuario[] = [
-  { id: 1, nome: "Administrador" },
-  { id: 2, nome: "Secretaria" },
-  { id: 3, nome: "Financeiro" },
-  { id: 4, nome: "Coordenacao" },
+  { id: 1, value: "admin", nome: "Administrador" },
+  { id: 2, value: "secretary", nome: "Secretaria" },
+  { id: 3, value: "finance", nome: "Financeiro" },
+  { id: 4, value: "coordination", nome: "Coordenação" },
 ];
+
+function getRoleLabel(value: string): string {
+  return roles.find((role) => role.value === value)?.nome ?? value;
+}
 
 const NOVO_USUARIO_INICIAL = {
   firstName: "",
@@ -75,8 +86,98 @@ const NOVO_USUARIO_INICIAL = {
   personalEmail: "",
 };
 
-export default function Usuarios(): JSX.Element {
+// Converte o usuário retornado pela API para o formato usado na tela
+function formatUsuario(usuario: UsuarioApi): Usuario {
+  return {
+    id: usuario.id,
+    firstName: usuario.firstName,
+    lastName: usuario.lastName,
+    nome: usuario.name || `${usuario.firstName} ${usuario.lastName}`,
+    email: usuario.email,
+    emailPessoal: usuario.personalEmail,
+    role: usuario.role,
+    status: usuario.isActive ? "Ativo" : "Inativo",
+  };
+}
 
+type UserFormValues = {
+  firstName: string;
+  lastName: string;
+  emailPessoal: string;
+  role: string;
+};
+
+// Mantido FORA do componente Usuarios: se fosse declarado dentro, seria recriado
+// a cada render e os inputs perderiam o foco a cada tecla digitada.
+function UsuarioFormFields({
+  values,
+  onChange,
+}: {
+  values: UserFormValues;
+  onChange: (field: keyof UserFormValues, value: string) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <Field>
+        <FieldLabel htmlFor="editFirstName">Nome</FieldLabel>
+        <Input
+          id="editFirstName"
+          autoComplete="off"
+          placeholder="Carlos"
+          required
+          value={values.firstName}
+          onChange={(e) => onChange("firstName", e.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="editLastName">Sobrenome</FieldLabel>
+        <Input
+          id="editLastName"
+          autoComplete="off"
+          placeholder="Oliveira"
+          required
+          value={values.lastName}
+          onChange={(e) => onChange("lastName", e.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="editPersonalEmail">E-mail pessoal</FieldLabel>
+        <Input
+          id="editPersonalEmail"
+          autoComplete="off"
+          type="email"
+          placeholder="usuario@email.com"
+          value={values.emailPessoal}
+          required
+          onChange={(e) => onChange("emailPessoal", e.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="editRole">Cargo</FieldLabel>
+        <Select
+          value={values.role}
+          onValueChange={(value) => onChange("role", value)}
+          required
+        >
+          <SelectTrigger id="editRole">
+            <SelectValue placeholder="Selecione um cargo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {roles.map((role) => (
+                <SelectItem key={role.id} value={role.value}>
+                  {role.nome}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
+    </div>
+  );
+}
+
+export default function Usuarios(): JSX.Element {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
@@ -84,6 +185,8 @@ export default function Usuarios(): JSX.Element {
   const [erroCadastro, setErroCadastro] = useState("");
   const [senhaTemporaria, setSenhaTemporaria] = useState("");
   const [emailInstitucional, setEmailInstitucional] = useState("");
+  const [atualizando, setAtualizando] = useState(false);
+  const [erroAtualizacao, setErroAtualizacao] = useState("");
   const [excluindo, setExcluindo] = useState(false);
   const [erroExclusao, setErroExclusao] = useState("");
   const [busca, setBusca] = useState("");
@@ -104,22 +207,12 @@ export default function Usuarios(): JSX.Element {
         setErro("");
 
         const dados = await listarUsuarios();
-
-        const usuariosFormatados: Usuario[] = dados.map((usuario) => ({
-          id: usuario.id,
-          nome: usuario.name || `${usuario.firstName} ${usuario.lastName}`,
-          email: usuario.email,
-          emailPessoal: usuario.personalEmail,
-          role: usuario.role,
-          status: usuario.isActive ? "Ativo" : "Inativo",
-        }));
-
-        setUsuarios(usuariosFormatados);
+        setUsuarios(dados.map(formatUsuario));
       } catch (error) {
         setErro(
           error instanceof Error
             ? error.message
-            : "Não foi possível carregar os usuários."
+            : "Não foi possível carregar os usuários.",
         );
       } finally {
         setCarregando(false);
@@ -128,7 +221,6 @@ export default function Usuarios(): JSX.Element {
 
     carregarUsuarios();
   }, []);
-
 
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
 
@@ -145,10 +237,7 @@ export default function Usuarios(): JSX.Element {
       !novoUsuario.personalEmail.trim()
     ) {
       setErroCadastro("Preencha todos os campos.");
-      showToast.warning(
-        "Campos não preenchidos",
-        `Preencha todos os campos`,
-      );
+      showToast.warning("Campos não preenchidos", `Preencha todos os campos`);
       return;
     }
 
@@ -162,7 +251,10 @@ export default function Usuarios(): JSX.Element {
         personalEmail: novoUsuario.personalEmail.trim(),
       });
 
-      showToast.success("Usuário cadastrado","Registro de usuário inserido com sucesso");
+      showToast.success(
+        "Usuário cadastrado",
+        "Registro de usuário inserido com sucesso",
+      );
 
       // Armazena os dados retornados pelo cadastro.
       setSenhaTemporaria(resultado.temporaryPassword);
@@ -171,46 +263,87 @@ export default function Usuarios(): JSX.Element {
       // Atualiza a listagem sem comprometer o resultado do cadastro.
       try {
         const dados = await listarUsuarios();
-
-        const usuariosFormatados: Usuario[] = dados.map((usuario) => ({
-          id: usuario.id,
-          nome: usuario.name || `${usuario.firstName} ${usuario.lastName}`,
-          email: usuario.email,
-          emailPessoal: usuario.personalEmail,
-          role: usuario.role,
-          status: usuario.isActive ? "Ativo" : "Inativo",
-        }));
-
-        setUsuarios(usuariosFormatados);
+        setUsuarios(dados.map(formatUsuario));
       } catch {
         // O cadastro foi concluído mesmo se a atualização falhar.
         showToast.warning(
           "Cadastro realizado",
           `Não foi possível atualizar a listagem.`,
         );
-        setErro("Cadastro realizado, mas não foi possível atualizar a listagem.");
+        setErro(
+          "Cadastro realizado, mas não foi possível atualizar a listagem.",
+        );
       }
-
     } catch (error) {
-      showToast.error("Falha no cadastro", `Não foi possível cadastrar o usuário`);
+      showToast.error(
+        "Falha no cadastro",
+        `Não foi possível cadastrar o usuário`,
+      );
       setErroCadastro(
         error instanceof Error
           ? error.message
-          : "Não foi possível cadastrar o usuário."
+          : "Não foi possível cadastrar o usuário.",
       );
     } finally {
       setCadastrando(false);
     }
   }
 
-  function handleEditUser() {
+  async function handleEditUser() {
     if (!selectedUser) return;
-    setUsuarios((prev) =>
-      prev.map((u) => (u.id === selectedUser.id ? selectedUser : u)),
-    );
-    setOpenEdit(false);
-  }
 
+    if (
+      !selectedUser.firstName.trim() ||
+      !selectedUser.lastName.trim() ||
+      !selectedUser.emailPessoal.trim() ||
+      !selectedUser.role
+    ) {
+      setErroAtualizacao("Preencha todos os campos.");
+      showToast.warning("Campos não preenchidos", "Preencha todos os campos");
+      return;
+    }
+
+    try {
+      setAtualizando(true);
+      setErroAtualizacao("");
+
+      await atualizarUsuario(selectedUser.id, {
+        firstName: selectedUser.firstName.trim(),
+        lastName: selectedUser.lastName.trim(),
+        personalEmail: selectedUser.emailPessoal.trim(),
+        role: selectedUser.role as UserRole,
+      });
+
+      showToast.success("Usuário atualizado", "Alterações salvas com sucesso");
+
+      // Recarrega a listagem a partir do backend.
+      try {
+        const dados = await listarUsuarios();
+        setUsuarios(dados.map(formatUsuario));
+      } catch {
+        // A atualização foi concluída mesmo se o recarregamento falhar.
+        showToast.warning(
+          "Usuário atualizado",
+          "Não foi possível atualizar a listagem.",
+        );
+      }
+
+      setOpenEdit(false);
+      setSelectedUser(null);
+    } catch (error) {
+      showToast.error(
+        "Erro ao atualizar usuário",
+        "Não foi possível salvar as alterações.",
+      );
+      setErroAtualizacao(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar o usuário.",
+      );
+    } finally {
+      setAtualizando(false);
+    }
+  }
 
   async function handleDeleteUser() {
     if (!selectedUser) return;
@@ -227,13 +360,12 @@ export default function Usuarios(): JSX.Element {
         prev.map((usuario) =>
           usuario.id === selectedUser.id
             ? { ...usuario, status: "Inativo" }
-            : usuario
-        )
+            : usuario,
+        ),
       );
 
       setOpenDelete(false);
       setSelectedUser(null);
-
     } catch (error) {
       showToast.error(
         "Erro ao desativar registro",
@@ -242,7 +374,7 @@ export default function Usuarios(): JSX.Element {
       setErroExclusao(
         error instanceof Error
           ? error.message
-          : "Não foi possível excluir o usuário."
+          : "Não foi possível excluir o usuário.",
       );
     } finally {
       setExcluindo(false);
@@ -253,12 +385,12 @@ export default function Usuarios(): JSX.Element {
     <div className="flex h-screen bg-zinc-100 dark:bg-[#181818]">
       {/* CONTEÚDO */}
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Usuários</h2>
-
+        <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
+          Usuários
+        </h2>
 
         {/* BUSCA E BOTÃO ADICIONAR */}
         <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -295,18 +427,27 @@ export default function Usuarios(): JSX.Element {
             <Plus size={18} />
             <span>Cadastrar Usuário</span>
           </Button>
-
         </div>
 
         {/* TABELA */}
         <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
           <TableHeader>
             <TableRow>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Nome</TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">E-mail</TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Role</TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Status</TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Ações</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Nome
+              </TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                E-mail
+              </TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Cargo
+              </TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Status
+              </TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -319,7 +460,10 @@ export default function Usuarios(): JSX.Element {
               </TableRow>
             ) : erro ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-red-500 py-6">
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-red-500 py-6"
+                >
                   {erro}
                 </TableCell>
               </TableRow>
@@ -344,7 +488,7 @@ export default function Usuarios(): JSX.Element {
                     {usuario.email}
                   </TableCell>
                   <TableCell className="text-zinc-800 dark:text-white">
-                    {usuario.role}
+                    {getRoleLabel(usuario.role)}
                   </TableCell>
                   <TableCell className="text-zinc-800 dark:text-white">
                     {usuario.status}
@@ -362,6 +506,7 @@ export default function Usuarios(): JSX.Element {
                         <DropdownMenuItem
                           onClick={() => {
                             setSelectedUser(usuario);
+                            setErroAtualizacao("");
                             setOpenEdit(true);
                           }}
                         >
@@ -392,7 +537,6 @@ export default function Usuarios(): JSX.Element {
       </main>
 
       {/* ── MODAL ADICIONAR ── */}
-
       <Dialog
         open={openAdd}
         onOpenChange={(open) => {
@@ -427,7 +571,8 @@ export default function Usuarios(): JSX.Element {
               </Field>
 
               <p className="text-sm text-amber-600">
-                Guarde essa senha. O usuário deverá alterá-la no primeiro acesso.
+                Guarde essa senha. O usuário deverá alterá-la no primeiro
+                acesso.
               </p>
             </div>
           ) : (
@@ -507,10 +652,7 @@ export default function Usuarios(): JSX.Element {
                   Cancelar
                 </Button>
 
-                <Button
-                  onClick={handleAddUser}
-                  disabled={cadastrando}
-                >
+                <Button onClick={handleAddUser} disabled={cadastrando}>
                   {cadastrando ? "Cadastrando..." : "Cadastrar"}
                 </Button>
               </>
@@ -519,9 +661,16 @@ export default function Usuarios(): JSX.Element {
         </DialogContent>
       </Dialog>
 
-
       {/* ── MODAL EDITAR ── */}
-      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+      <Dialog
+        open={openEdit}
+        onOpenChange={(open) => {
+          if (!atualizando) {
+            setOpenEdit(open);
+            if (!open) setErroAtualizacao("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Registro</DialogTitle>
@@ -533,8 +682,9 @@ export default function Usuarios(): JSX.Element {
           {selectedUser && (
             <UsuarioFormFields
               values={{
-                nome: selectedUser.nome,
-                email: selectedUser.email,
+                firstName: selectedUser.firstName,
+                lastName: selectedUser.lastName,
+                emailPessoal: selectedUser.emailPessoal,
                 role: selectedUser.role,
               }}
               onChange={(field, value) =>
@@ -545,15 +695,24 @@ export default function Usuarios(): JSX.Element {
             />
           )}
 
+          {erroAtualizacao && (
+            <p className="text-sm text-red-500">{erroAtualizacao}</p>
+          )}
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenEdit(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setOpenEdit(false)}
+              disabled={atualizando}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleEditUser}>Atualizar</Button>
+            <Button onClick={handleEditUser} disabled={atualizando}>
+              {atualizando ? "Atualizando..." : "Atualizar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
 
       {/* MODAL EXCLUIR */}
       <Dialog
@@ -569,15 +728,13 @@ export default function Usuarios(): JSX.Element {
           <DialogHeader>
             <DialogTitle>Excluir Usuário</DialogTitle>
             <DialogDescription>
-              Deseja realmente inativar este usuário?
-              Essa ação não apagará o registro do banco de dados.
+              Deseja realmente inativar este usuário? Essa ação não apagará o
+              registro do banco de dados.
             </DialogDescription>
           </DialogHeader>
 
           {erroExclusao && (
-            <p className="text-sm text-red-500">
-              {erroExclusao}
-            </p>
+            <p className="text-sm text-red-500">{erroExclusao}</p>
           )}
 
           <DialogFooter>
@@ -599,70 +756,6 @@ export default function Usuarios(): JSX.Element {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
-
-  type UserFormValues = {
-    nome: string;
-    email: string;
-    role: string;
-  };
-
-  function UsuarioFormFields({
-    values,
-    onChange,
-  }: {
-    values: UserFormValues;
-    onChange: (field: keyof UserFormValues, value: string) => void;
-  }) {
-    return (
-      <div className="space-y-4">
-        <Field>
-          <FieldLabel htmlFor="teacherName">Nome do Usuario</FieldLabel>
-          <Input
-            id="teacherName"
-            autoComplete="off"
-            placeholder="John Doe"
-            required
-            value={values.nome}
-            onChange={(e) => onChange("nome", e.target.value)}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="email">E-mail</FieldLabel>
-          <Input
-            id="email"
-            autoComplete="off"
-            type="email"
-            placeholder="usuario@email.com"
-            value={values.email}
-            required
-            onChange={(e) => onChange("email", e.target.value)}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="roles">Role</FieldLabel>
-          <Select
-            value={values.role}
-            onValueChange={(value) => onChange("role", value)}
-            required
-          >
-            <SelectTrigger id="roles">
-              <SelectValue placeholder="Selecione um título" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.nome}>
-                    {role.nome}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
-      </div>
-    );
-  }
 }

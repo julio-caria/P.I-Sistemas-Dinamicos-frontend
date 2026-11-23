@@ -46,6 +46,7 @@ import {
   cadastrarUsuario,
   excluirUsuario,
 } from "@/services/userService";
+import { showToast } from "@/utils/toast";
 
 type Usuario = {
   id: string;
@@ -144,6 +145,10 @@ export default function Usuarios(): JSX.Element {
       !novoUsuario.personalEmail.trim()
     ) {
       setErroCadastro("Preencha todos os campos.");
+      showToast.warning(
+        "Campos não preenchidos",
+        `Preencha todos os campos`,
+      );
       return;
     }
 
@@ -156,6 +161,8 @@ export default function Usuarios(): JSX.Element {
         lastName: novoUsuario.lastName.trim(),
         personalEmail: novoUsuario.personalEmail.trim(),
       });
+
+      showToast.success("Usuário cadastrado","Registro de usuário inserido com sucesso");
 
       // Armazena os dados retornados pelo cadastro.
       setSenhaTemporaria(resultado.temporaryPassword);
@@ -177,10 +184,15 @@ export default function Usuarios(): JSX.Element {
         setUsuarios(usuariosFormatados);
       } catch {
         // O cadastro foi concluído mesmo se a atualização falhar.
+        showToast.warning(
+          "Cadastro realizado",
+          `Não foi possível atualizar a listagem.`,
+        );
         setErro("Cadastro realizado, mas não foi possível atualizar a listagem.");
       }
 
     } catch (error) {
+      showToast.error("Falha no cadastro", `Não foi possível cadastrar o usuário`);
       setErroCadastro(
         error instanceof Error
           ? error.message
@@ -208,6 +220,7 @@ export default function Usuarios(): JSX.Element {
       setErroExclusao("");
 
       await excluirUsuario(selectedUser.id);
+      showToast.success("Usuário desativado", `Registro de usuário desativado`);
 
       // Atualiza o status do usuário após confirmação do backend.
       setUsuarios((prev) =>
@@ -222,6 +235,10 @@ export default function Usuarios(): JSX.Element {
       setSelectedUser(null);
 
     } catch (error) {
+      showToast.error(
+        "Erro ao desativar registro",
+        `Não foi possível excluir o usuário.`,
+      );
       setErroExclusao(
         error instanceof Error
           ? error.message

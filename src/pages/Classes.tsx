@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { showToast } from "@/utils/toast";
 
 const NOVA_TURMA_INICIAL: TurmaFormValues = {
   courseId: "",
@@ -111,17 +112,27 @@ export default function Classes(): JSX.Element {
   async function handleAddTurma() {
     try {
       if (!novaTurma.courseId) {
-        alert("Selecione um curso para cadastrar a turma.");
+        showToast.warning(
+          "Informações de curso ausentes",
+          "Selecione um curso para cadastrar a turma",
+        );
+
         return;
       }
 
       if (!activeCourses.some((course) => course.id === novaTurma.courseId)) {
-        alert("O curso selecionado não está ativo.");
+        showToast.error(
+          "Curso inativo!",
+          "O curso selecionado não está ativo.",
+        );
         return;
       }
 
       if (!novaTurma.description.trim()) {
-        alert("Informe a descrição da turma.");
+        showToast.warning(
+          "Descrição necessária",
+          "Informe a descrição da turma.",
+        );
         return;
       }
 
@@ -131,6 +142,8 @@ export default function Classes(): JSX.Element {
         description: novaTurma.description.trim(),
       });
 
+      showToast.success("Turma criada!", "Turma registrada com sucesso");
+
       const classesData = await getClasses();
       setTurmas(classesData);
 
@@ -138,7 +151,10 @@ export default function Classes(): JSX.Element {
       setOpenAdd(false);
     } catch (error) {
       console.error("Erro ao cadastrar turma:", error);
-      alert("Não foi possível cadastrar a turma.");
+      showToast.error(
+        "Problema com a requisição",
+        "Não foi possível cadastrar a turma.",
+      );
     }
   }
 
@@ -147,17 +163,26 @@ export default function Classes(): JSX.Element {
 
     try {
       if (!editTurma.courseId) {
-        alert("Selecione um curso para atualizar a turma.");
+        showToast.warning(
+          "Curso não selecionado",
+          "Selecione um curso para atualizar a turma.",
+        );
         return;
       }
 
       if (!activeCourses.some((course) => course.id === editTurma.courseId)) {
-        alert("Selecione um curso ativo para atualizar a turma.");
+        showToast.warning(
+          "Curso não está ativo",
+          "Selecione um curso ativo para atualizar a turma.",
+        );
         return;
       }
 
       if (!editTurma.description.trim()) {
-        alert("Informe a descrição da turma.");
+         showToast.warning(
+           "Descrição necessária",
+           "Informe a descrição da turma.",
+         );
         return;
       }
 
@@ -169,6 +194,11 @@ export default function Classes(): JSX.Element {
         isActive: selectedTurma.isActive,
       });
 
+      showToast.success(
+        "Turma atualizada",
+        "Informações da Turma atualizada",
+      );
+
       const classesData = await getClasses();
       setTurmas(classesData);
 
@@ -176,7 +206,10 @@ export default function Classes(): JSX.Element {
       setSelectedTurma(null);
     } catch (error) {
       console.error("Erro ao atualizar turma:", error);
-      alert("Não foi possível atualizar a turma.");
+      showToast.error(
+        "Problema com a requisição",
+        "Não foi possível atualizar a turma.",
+      );
     }
   }
 
@@ -186,6 +219,8 @@ export default function Classes(): JSX.Element {
     try {
       await deleteClass(selectedTurma.id);
 
+      showToast.success("Turma desativada", "Turma desativada do curso");
+
       const classesData = await getClasses();
       setTurmas(classesData);
 
@@ -193,7 +228,10 @@ export default function Classes(): JSX.Element {
       setSelectedTurma(null);
     } catch (error) {
       console.error("Erro ao excluir turma:", error);
-      alert("Não foi possível excluir a turma.");
+      showToast.error(
+        "Problema com a requisição",
+        "Não foi possível excluir a turma.",
+      );
     }
   }
 

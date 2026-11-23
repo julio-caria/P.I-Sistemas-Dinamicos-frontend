@@ -47,6 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { showToast } from "@/utils/toast";
 
 type Aluno = {
   id: string;
@@ -235,6 +236,10 @@ export default function Alunos(): JSX.Element {
         !novoAluno.contatoEmergencia.trim()
       ) {
         setErro("Preencha todos os campos obrigatórios.");
+        showToast.warning(
+          "Campos não preenchidos",
+          "Preencha todos os campos obrigatórios.",
+        );
 
         return;
       }
@@ -274,6 +279,10 @@ export default function Alunos(): JSX.Element {
       }
 
       await createStudent(studentData);
+      showToast.success(
+        "Aluno registrado",
+        "Novo aluno cadastrado com sucesso",
+      );
 
       await carregarAlunos();
 
@@ -282,6 +291,10 @@ export default function Alunos(): JSX.Element {
       setOpenAdd(false);
     } catch (error) {
       console.error("Erro ao cadastrar aluno:", error);
+      showToast.error(
+        "Erro ao cadastrar aluno",
+        "Não foi possível cadastrar o aluno.",
+      );
 
       setErro(
         error instanceof Error
@@ -310,6 +323,10 @@ export default function Alunos(): JSX.Element {
       setOpenEdit(true);
     } catch (error) {
       console.error("Erro ao buscar aluno:", error);
+      showToast.error(
+        "Erro ao buscar aluno",
+        "Não foi possível pesquisar o aluno.",
+      );
 
       setErro(
         error instanceof Error
@@ -348,38 +365,28 @@ export default function Alunos(): JSX.Element {
 
       const studentData: UpdateStudentData = {
         name: alunoEmEdicao.nome.trim(),
-
         cpf: alunoEmEdicao.cpf.replace(/\D/g, ""),
-
         email: alunoEmEdicao.email.trim().toLowerCase(),
-
         phone: alunoEmEdicao.telefone.trim(),
-
         address: alunoEmEdicao.endereco.trim(),
-
         // Preserva o número de matrícula gerado pelo backend.
         registrationNumber: studentEditando.registrationNumber,
-
         admissionDate: converterDataParaISO(alunoEmEdicao.dtMatricula),
-
         status: alunoEmEdicao.status,
-
         secondaryPhone: alunoEmEdicao.telefoneSecundario.trim() || null,
-
         birthDate: alunoEmEdicao.dtNascimento || null,
-
         gender: (alunoEmEdicao.genero as Gender) || null,
-
         nationality: alunoEmEdicao.nacionalidade.trim() || null,
-
         naturalness: alunoEmEdicao.naturalidade.trim() || null,
-
         photoUrl: alunoEmEdicao.fotoUrl.trim() || null,
-
         emergencyContact: alunoEmEdicao.contatoEmergencia.trim() || null,
       };
 
       await updateStudent(studentEditando.id, studentData);
+      showToast.success(
+        "Aluno atualizado",
+        "Registro de Aluno atualizado com sucesso",
+      );
 
       await carregarAlunos();
 
@@ -388,6 +395,10 @@ export default function Alunos(): JSX.Element {
       setStudentEditando(null);
     } catch (error) {
       console.error("Erro ao atualizar aluno:", error);
+      showToast.error(
+        "Erro ao atualizado aluno",
+        "Não foi possível atualizar o aluno.",
+      );
 
       setErro(
         error instanceof Error
@@ -409,12 +420,21 @@ export default function Alunos(): JSX.Element {
 
       await deleteStudent(selectedAluno.id);
 
+      showToast.success(
+        "Aluno desativado",
+        "Registro do aluno desativo com sucesso",
+      );
+
       await carregarAlunos();
 
       setSelectedAluno(null);
       setOpenDelete(false);
     } catch (error) {
       console.error("Erro ao excluir aluno:", error);
+      showToast.error(
+        "Erro ao excluir aluno",
+        "Não foi possível excluir o aluno.",
+      );
 
       setErro(
         error instanceof Error

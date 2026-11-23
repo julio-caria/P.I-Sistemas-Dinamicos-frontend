@@ -45,6 +45,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { showToast } from "@/utils/toast";
 
 type SupplierFormValues = {
   legalName: string;
@@ -160,6 +161,10 @@ export default function Fornecedores(): JSX.Element {
       };
 
       await createSupplier(dadosFornecedor);
+      showToast.success(
+        "Fornecedor cadastrado",
+        "Registro de Fornecedor inserido com sucesso",
+      );
 
       await loadSuppliers();
 
@@ -170,8 +175,10 @@ export default function Fornecedores(): JSX.Element {
       setOpenAdd(false);
     } catch (error) {
       console.error("Erro ao cadastrar fornecedor:", error);
-
-      alert("Não foi possível cadastrar o fornecedor. Verifique os dados.");
+      showToast.error(
+        "Erro ao cadastrar fornecedor",
+        "Não foi possível cadastrar o fornecedor. Verifique os dados.",
+      );
     } finally {
       setLoadingAdd(false);
     }
@@ -191,10 +198,12 @@ export default function Fornecedores(): JSX.Element {
       setFormEdicao(supplierToForm(supplier));
     } catch (error) {
       console.error("Erro ao carregar fornecedor:", error);
+      showToast.error(
+        "Erro ao carregar fornecedor",
+        "Não foi possível carregar os dados do fornecedor.",
+      );
 
       setOpenEdit(false);
-
-      alert("Não foi possível carregar os dados do fornecedor.");
     } finally {
       setLoadingEdit(false);
     }
@@ -218,6 +227,10 @@ export default function Fornecedores(): JSX.Element {
       };
 
       await updateSupplier(selectedFornecedor.id, dadosAtualizados);
+      showToast.success(
+        "Dados atualizados",
+        "Registro de fornecedor atualizado com sucesso",
+      );
 
       await loadSuppliers();
 
@@ -226,8 +239,10 @@ export default function Fornecedores(): JSX.Element {
       setOpenEdit(false);
     } catch (error) {
       console.error("Erro ao atualizar fornecedor:", error);
-
-      alert("Não foi possível atualizar o fornecedor.");
+      showToast.success(
+        "Erro ao atualizar fornecedor",
+        "Não foi possível atualizar o fornecedor.",
+      );
     } finally {
       setLoadingSave(false);
     }
@@ -240,6 +255,10 @@ export default function Fornecedores(): JSX.Element {
       setLoadingDelete(true);
 
       await deleteSupplier(selectedFornecedor.id);
+      showToast.success(
+        "Fornecedor desativado",
+        "Registro de fornecedor desativado com sucesso",
+      );
 
       await loadSuppliers();
 
@@ -248,8 +267,10 @@ export default function Fornecedores(): JSX.Element {
       setOpenDelete(false);
     } catch (error) {
       console.error("Erro ao excluir fornecedor:", error);
-
-      alert("Não foi possível excluir o fornecedor.");
+      showToast.error(
+        "Erro ao excluir fornecedor",
+        "Não foi possível excluir o fornecedor.",
+      );
     } finally {
       setLoadingDelete(false);
     }

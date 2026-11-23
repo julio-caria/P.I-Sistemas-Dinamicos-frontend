@@ -41,6 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { showToast } from "@/utils/toast";
 
 type Curso = {
   id: string;
@@ -144,7 +145,10 @@ export default function Cursos(): JSX.Element {
         semestres < 1 ||
         cargaHoraria < 1
       ) {
-        alert("Preencha todos os campos corretamente.");
+        showToast.warning(
+          "Campos vazios",
+          "Preencha todos os campos corretamente.",
+        );
         return;
       }
 
@@ -159,6 +163,8 @@ export default function Cursos(): JSX.Element {
               ? "online"
               : "hybrid",
       });
+
+      showToast.success("Curso cadastrado", "Novo curso registrado com sucesso");
 
       const data = await getCourses();
 
@@ -190,7 +196,10 @@ export default function Cursos(): JSX.Element {
       setOpenAdd(false);
     } catch (error) {
       console.error("Erro ao cadastrar curso:", error);
-      alert("Não foi possível cadastrar o curso.");
+      showToast.error(
+        "Erro ao cadastrar curso",
+        "Não foi possível incluir o curso.",
+      );
     }
   }
 
@@ -199,6 +208,11 @@ export default function Cursos(): JSX.Element {
 
     try {
       await deleteCourse(selectedCurso.id);
+      showToast.success(
+        "Curso desativado",
+        "Curso desativado com sucesso",
+      );
+
 
       const data = await getCourses();
 
@@ -222,7 +236,10 @@ export default function Cursos(): JSX.Element {
       setSelectedCurso(null);
     } catch (error) {
       console.error("Erro ao excluir curso:", error);
-      alert("Não foi possível excluir o curso.");
+      showToast.error(
+        "Erro ao excluir curso",
+        "Não foi possível excluir o curso.",
+      );
     }
   }
 
@@ -230,7 +247,9 @@ export default function Cursos(): JSX.Element {
     <div className="flex h-screen bg-zinc-100 dark:bg-[#181818]">
       {/* CONTEÚDO */}
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Cursos</h2>
+        <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
+          Cursos
+        </h2>
 
         {/* BUSCA E BOTÃO */}
         <div className="flex items-center justify-between gap-4 mb-6">
@@ -265,16 +284,27 @@ export default function Cursos(): JSX.Element {
         <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
           <TableHeader>
             <TableRow className="dark:border-zinc-700">
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Nome</TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Docente</TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Modalidade</TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Semestres</TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold">Carga Horária</TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Nome
+              </TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Docente
+              </TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Modalidade
+              </TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Semestres
+              </TableHead>
+              <TableHead className="text-zinc-800 dark:text-white font-bold">
+                Carga Horária
+              </TableHead>
               <TableHead className="text-zinc-800 dark:text-white font-bold">
                 Status
               </TableHead>
-              <TableHead className="text-zinc-800 dark:text-white font-bold text-right">Ações</TableHead>
-
+              <TableHead className="text-zinc-800 dark:text-white font-bold text-right">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -346,7 +376,6 @@ export default function Cursos(): JSX.Element {
             ))}
           </TableBody>
         </Table>
-
       </main>
 
       {/* MODAL ADICIONAR */}

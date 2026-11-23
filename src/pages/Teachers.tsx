@@ -42,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { showToast } from "@/utils/toast";
 
 type TeacherRow = {
   id: string | number;
@@ -92,7 +93,6 @@ function getDegreeLevelLabel(degreeLevel: Teacher["degreeLevel"]) {
 }
 
 export default function Teachers(): JSX.Element {
-
   const [teachers, setTeachers] = useState<TeacherRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -145,16 +145,16 @@ export default function Teachers(): JSX.Element {
     };
   }, []);
 
-  const [selectedTeacher, setSelectedTeacher] =
-    useState<TeacherRow | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherRow | null>(
+    null,
+  );
 
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
 
-  const [newTeacher, setNewTeacher] = useState<TeacherFormValues>(
-    NEW_TEACHER_INITIAL,
-  );
+  const [newTeacher, setNewTeacher] =
+    useState<TeacherFormValues>(NEW_TEACHER_INITIAL);
   async function handleAddTeacher() {
     try {
       await createTeacher({
@@ -167,6 +167,11 @@ export default function Teachers(): JSX.Element {
         employeeNumber: newTeacher.matriculaFuncional,
         degreeLevel: newTeacher.titulacao as Teacher["degreeLevel"],
       });
+
+      showToast.success(
+        "Docente registrado",
+        "Registro de Docente inserido com sucesso",
+      );
 
       const data = await getTeachers();
 
@@ -188,10 +193,9 @@ export default function Teachers(): JSX.Element {
       setNewTeacher(NEW_TEACHER_INITIAL);
       setOpenAdd(false);
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Erro ao cadastrar docente.",
+      showToast.error(
+        "Erro ao cadastrar docente",
+        `Não foi possível cadastrar o docente, ${error}`,
       );
     }
   }
@@ -211,6 +215,10 @@ export default function Teachers(): JSX.Element {
         degreeLevel: selectedTeacher.titulacao as Teacher["degreeLevel"],
         isActive: selectedTeacher.status === "Ativo",
       });
+      showToast.success(
+        "Docente atualizado",
+        "Informações do docente atualizadas",
+      );
 
       const data = await getTeachers();
 
@@ -232,10 +240,9 @@ export default function Teachers(): JSX.Element {
       setOpenEdit(false);
       setSelectedTeacher(null);
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Erro ao atualizar docente.",
+      showToast.error(
+        "Erro ao atualizar docente",
+        `Não foi possível atualizar o docente, ${error}`,
       );
     }
   }
@@ -245,6 +252,10 @@ export default function Teachers(): JSX.Element {
 
     try {
       await deleteTeacher(String(selectedTeacher.id));
+      showToast.success(
+        "Docente desativado",
+        "Registro de Docente desativado com sucesso",
+      );
 
       setTeachers((prev) =>
         prev.map((teacher) =>
@@ -257,10 +268,9 @@ export default function Teachers(): JSX.Element {
       setOpenDelete(false);
       setSelectedTeacher(null);
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Erro ao excluir docente.",
+      showToast.error(
+        "Erro ao desativar docente",
+        `Não foi possível desativar o docente, ${error}`,
       );
     }
   }
@@ -288,9 +298,15 @@ export default function Teachers(): JSX.Element {
         <Table className="bg-white dark:bg-[#242424] p-3 rounded-md">
           <TableHeader>
             <TableRow>
-              <TableHead className="text-zinc-800 font-bold dark:text-white">Nome</TableHead>
-              <TableHead className="text-zinc-800 font-bold dark:text-white">CPF</TableHead>
-              <TableHead className="text-zinc-800 font-bold dark:text-white">E-mail</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
+                Nome
+              </TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
+                CPF
+              </TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
+                E-mail
+              </TableHead>
               <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Endereço
               </TableHead>
@@ -300,8 +316,12 @@ export default function Teachers(): JSX.Element {
               <TableHead className="text-zinc-800 font-bold dark:text-white">
                 Titulação
               </TableHead>
-              <TableHead className="text-zinc-800 font-bold dark:text-white">Status</TableHead>
-              <TableHead className="text-zinc-800 font-bold dark:text-white">Ações</TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
+                Status
+              </TableHead>
+              <TableHead className="text-zinc-800 font-bold dark:text-white">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -325,20 +345,41 @@ export default function Teachers(): JSX.Element {
               </TableRow>
             ) : (
               teachers.map((teacher) => (
-                <TableRow key={teacher.id} className="dark:border-zinc-700 dark:hover:bg-[#303030]">
-                  <TableCell className="text-zinc-800 dark:text-white">{teacher.nome}</TableCell>
-                  <TableCell className="text-zinc-800 dark:text-white">{teacher.cpf}</TableCell>
-                  <TableCell className="text-zinc-800 dark:text-white">{teacher.email}</TableCell>
-                  <TableCell className="text-zinc-800 dark:text-white">{teacher.endereco}</TableCell>
-                  <TableCell className="text-zinc-800 dark:text-white">{teacher.matriculaFuncional}</TableCell>
-                  <TableCell className="text-zinc-800 dark:text-white">{teacher.titulacao
-                    ? getDegreeLevelLabel(teacher.titulacao)
-                    : "—"}</TableCell>
-                  <TableCell className="text-zinc-800 dark:text-white">{teacher.status}</TableCell>
+                <TableRow
+                  key={teacher.id}
+                  className="dark:border-zinc-700 dark:hover:bg-[#303030]"
+                >
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {teacher.nome}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {teacher.cpf}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {teacher.email}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {teacher.endereco}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {teacher.matriculaFuncional}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {teacher.titulacao
+                      ? getDegreeLevelLabel(teacher.titulacao)
+                      : "—"}
+                  </TableCell>
+                  <TableCell className="text-zinc-800 dark:text-white">
+                    {teacher.status}
+                  </TableCell>
                   <TableCell className="text-zinc-800 dark:text-white">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="size-8 dark:text-white dark:hover:bg-[#383838]">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 dark:text-white dark:hover:bg-[#383838]"
+                        >
                           <MoreHorizontalIcon />
                           <span className="sr-only">Abrir menu</span>
                         </Button>
@@ -378,7 +419,9 @@ export default function Teachers(): JSX.Element {
       <Dialog open={openAdd} onOpenChange={setOpenAdd}>
         <DialogContent className="dark:bg-[#242424] dark:border-[#363636] dark:text-white">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Cadastrar Docente</DialogTitle>
+            <DialogTitle className="dark:text-white">
+              Cadastrar Docente
+            </DialogTitle>
             <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400">
               Preencha os campos para cadastrar um docente.
             </DialogDescription>
@@ -392,7 +435,11 @@ export default function Teachers(): JSX.Element {
           />
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenAdd(false)} className="dark:bg-[#303030] dark:text-white dark:border-[#363636] dark:hover:bg-[#383838]">
+            <Button
+              variant="outline"
+              onClick={() => setOpenAdd(false)}
+              className="dark:bg-[#303030] dark:text-white dark:border-[#363636] dark:hover:bg-[#383838]"
+            >
               Cancelar
             </Button>
             <Button onClick={handleAddTeacher}>Cadastrar</Button>
@@ -431,7 +478,11 @@ export default function Teachers(): JSX.Element {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenEdit(false)} className="dark:bg-[#303030] dark:text-white dark:border-[#363636] dark:hover:bg-[#383838]">
+            <Button
+              variant="outline"
+              onClick={() => setOpenEdit(false)}
+              className="dark:bg-[#303030] dark:text-white dark:border-[#363636] dark:hover:bg-[#383838]"
+            >
               Cancelar
             </Button>
             <Button onClick={handleEditTeacher}>Atualizar</Button>
@@ -446,7 +497,9 @@ export default function Teachers(): JSX.Element {
             <DialogTitle>Excluir Registro</DialogTitle>
           </DialogHeader>
 
-          <p className="text-zinc-800 dark:text-white">Deseja realmente excluir este registro?</p>
+          <p className="text-zinc-800 dark:text-white">
+            Deseja realmente excluir este registro?
+          </p>
 
           <DialogFooter>
             <Button variant="destructive" onClick={handleDeleteTeacher}>
@@ -483,7 +536,9 @@ function TeacherFormFields({
   return (
     <div className="space-y-4">
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="teacherName" >Nome do Docente</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="teacherName">
+          Nome do Docente
+        </FieldLabel>
         <Input
           id="teacherName"
           autoComplete="off"
@@ -496,7 +551,9 @@ function TeacherFormFields({
         />
       </Field>
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="cpf">CPF</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="cpf">
+          CPF
+        </FieldLabel>
         <Input
           id="cpf"
           autoComplete="off"
@@ -510,7 +567,9 @@ function TeacherFormFields({
         />
       </Field>
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="rg">RG</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="rg">
+          RG
+        </FieldLabel>
         <Input
           id="rg"
           autoComplete="off"
@@ -522,7 +581,9 @@ function TeacherFormFields({
         />
       </Field>
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="email">E-mail</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="email">
+          E-mail
+        </FieldLabel>
         <Input
           id="email"
           type="email"
@@ -536,7 +597,9 @@ function TeacherFormFields({
         />
       </Field>
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="phone">Telefone</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="phone">
+          Telefone
+        </FieldLabel>
         <Input
           id="phone"
           type="tel"
@@ -550,7 +613,9 @@ function TeacherFormFields({
         />
       </Field>
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="address">Endereço</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="address">
+          Endereço
+        </FieldLabel>
         <Input
           id="address"
           autoComplete="off"
@@ -578,12 +643,15 @@ function TeacherFormFields({
         />
       </Field>
       <Field>
-        <FieldLabel className="dark:text-white" htmlFor="titration">Titulação</FieldLabel>
+        <FieldLabel className="dark:text-white" htmlFor="titration">
+          Titulação
+        </FieldLabel>
         <Select
           value={values.titulacao}
           onValueChange={(value) =>
             onChange("titulacao", value as TeacherFormValues["titulacao"])
-          } required
+          }
+          required
         >
           <SelectTrigger id="titration">
             <SelectValue placeholder="Selecione um título" />

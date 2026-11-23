@@ -4,7 +4,7 @@ import Home from "@/pages/Home";
 import Login from "./pages/Login";
 import Alunos from "./pages/Students";
 import Fornecedores from "./pages/Fornecedores";
-import Docentes from "./pages/Docentes";
+import Docentes from "./pages/Teachers";
 import Cursos from "./pages/Cursos";
 import Turmas from "./pages/Classes";
 import Usuarios from "./pages/Usuarios";
